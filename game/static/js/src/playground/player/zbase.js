@@ -20,14 +20,15 @@ class Player extends AcGameObject {
         this.damage_speed = 0;
         this.friction = 0.5;
 
-        this.is_attacked
+        this.AI_attack_time = 0;
+
 
         this.cur_skill = null;
     }
 
     start(){
         if (this.is_me){
-            this.add_listening_events();
+            this.add_listening_events(this.is_me);
         }else{
             let tx = Math.random() * this.playground.width;
             let ty = Math.random() * this.playground.height;
@@ -36,7 +37,7 @@ class Player extends AcGameObject {
 
     }
 
-    add_listening_events() {
+    add_listening_events(is_me) {
         let outer = this;
         this.playground.game_map.$canvas.on("contextmenu", function() {  // 暂时不知道这个是做什么的
             return false;
@@ -61,7 +62,9 @@ class Player extends AcGameObject {
 
                 return false;
             }
-        })
+        });
+
+
     };
 
     attacked(angle, damage) {
@@ -73,8 +76,19 @@ class Player extends AcGameObject {
             this.damage_speed = damage * 20;
             this.damage_x = Math.cos(angle);
             this.damage_y = Math.sin(angle);
+            this.speed *= 0.8;
         }
-
+        for (let i = 0; i < 20 + Math.random() * 5; i ++ ) {
+            let x = this.x;
+            let y = this.y;
+            let radius = this.radius * Math.random() * 0.1;
+            let angle = Math.PI * 2 * Math.random();
+            let vx = Math.cos(angle);
+            let vy = Math.sin(angle);
+            let speed = this.speed * 10;
+            let move_length = this.radius * Math.random() * 10;
+            new Particle(this.playground, x, y, radius, speed, vx, vy, move_length);
+        }
 
     }
 
@@ -89,7 +103,6 @@ class Player extends AcGameObject {
         let move_length = this.playground.height * 1;
         let damage = this.playground.height * 0.01;        // 想当于玩家的0.05的百分之二十的血量
         new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, damage);
-        
 
     }
 
@@ -109,6 +122,11 @@ class Player extends AcGameObject {
     }
 
     update(){
+        this.AI_attack_time += this.timedelta / 1000;
+        if (!this.is_me && this.AI_attack_time > 5 && Math.random() < 1 / 300 ) {
+            let player = this.playground.players[0];
+            this.shoot_fireball(player.x, player.y);
+        }
         // 收到伤害单位时间移动的距离就是伤害的速度
         if (this.damage_speed > this.eps) {
             this.vx = this.vy = 0;
