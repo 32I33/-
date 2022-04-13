@@ -21,6 +21,7 @@ class AcGameMenu{
     </div>
 </div>
 `);
+        //this.$menu.hide();
         this.root.$ac_game.append(this.$menu);
         this.$single = this.$menu.find('.ac-game-menu-field-item-single-mode');
         this.$multi = this.$menu.find('.ac-game-menu-field-item-multi-mode');
@@ -35,7 +36,7 @@ class AcGameMenu{
         let outer = this;
         this.$single.click(function(){
             outer.hide();
-            outer.root.playground.show();
+            outer.root.playground.show("single mode");
         });
         this.$multi.click(function() {
             console.log("click multi_mode!");
@@ -131,6 +132,8 @@ class GameMap extends AcGameObject {
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
 }
+// 这个是被打击之后产生的小颗粒
+
 class Particle extends AcGameObject {
     constructor(playground, x, y, radius, speed, vx, vy, move_length) {
         super();
@@ -249,9 +252,11 @@ class Player extends AcGameObject {
 
     };
 
+
     attacked(angle, damage) {
         this.radius -= damage;
         if (this.radius < this.eps) {
+            console.log("destroy");
             this.destroy();
             return false;
         }else {
@@ -306,8 +311,10 @@ class Player extends AcGameObject {
     update(){
         this.AI_attack_time += this.timedelta / 1000;
         if (!this.is_me && this.AI_attack_time > 5 && Math.random() < 1 / 300 ) {
-            let player = this.playground.players[0];
-            this.shoot_fireball(player.x, player.y);
+
+            let t = Math.floor(this.playground.players.length * Math.random());
+            let target = this.playground.players[t];
+            this.shoot_fireball(target.x, target.y);
         }
         // 收到伤害单位时间移动的距离就是伤害的速度
         if (this.damage_speed > this.eps) {
@@ -373,7 +380,6 @@ class FireBall extends AcGameObject {
     start(){
     }
 
-
     update(){
 
         let outer = this;
@@ -381,8 +387,8 @@ class FireBall extends AcGameObject {
         if (this.move_length < this.eps) {
             this.destroy();
             return false;
-
         }
+
         let moved = Math.min(this.speed * this.timedelta / 1000, this.move_length);
         this.x += this.vx * moved;
         this.y += this.vy * moved;
@@ -439,16 +445,10 @@ class AcGamePlayground {
         this.height = this.$playground.height();
         this.game_map = new GameMap(this);
         this.players = [];
-        this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, true));
-
-        for (let i = 0; i < 5; i ++ ) {
-            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "blue", this.height * 0.15, false));
-        }
+        this.colors = ["blue", "red", "yellow", "green", "purple"];
 
         this.start();
     };
-            
-
 
 
     start(){
@@ -457,21 +457,74 @@ class AcGamePlayground {
     update(){
     }
 
-    show(){         // 打开playground界面
+    show(mode){         // 打开playground界面
         this.$playground.show();
+        if (mode == "single mode"){
+            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, true));
+
+            for (let i = 0; i < 5; i ++ ) {
+                this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, this.colors[Math.floor(Math.random() * 5)], this.height * 0.15, false));
+            }
+        }
     }
     hide(){
         this.$playground.hide();
     }
 }
+class Settings {
+    constructor(root){
+        this.root = root;
+        this.platform = "WEB";
+        if (this.root.AcWingOS) this.platform = "ACAPP";
+        this.start();
+    }   
+    start(){
+        this.getinfo();
+    }
+
+
+    register(){
+    }
+    login(){
+    }
+
+    getinfo(){
+        let outer = this;
+        
+        $.ajax({
+            console.log("getinfo");
+            url: "https://120.79.151.96:8000/settings/getinfo/",
+            type: "GET",
+            data: {
+                platform: outer.platform,
+            },
+            success: function(resp){
+                console.log(resp);
+                console.log("create ac_game");
+                if (resp.result === "success"){
+                    outer.hide();
+                    outer.root.menu.show();
+
+                }else{
+                    outer.login();
+                }
+            }
+        })
+    }
+    hide(){}
+    show(){}
+}
 export class AcGame {
-    constructor(id) {
-       console.log("create ac_game");
+    constructor(id, AcWingOS) {
         this.id = id;
         this.$ac_game = $('#' + id);
-        // this.menu = new AcGameMenu(this);
-        
+        this.AcWingOS = AcWingOS;
+
+       // this.settings = new Settings(this);
+        this.menu = new AcGameMenu(this);
         this.playground = new AcGamePlayground(this);
+
+        this.start();
     }
 
     // start就是一个构造函数的延申，通过他来做init
