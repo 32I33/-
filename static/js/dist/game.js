@@ -492,8 +492,7 @@ class Settings {
         let outer = this;
         
         $.ajax({
-            console.log("getinfo");
-            url: "https://120.79.151.96:8000/settings/getinfo/",
+            url: "https://app1495.acapp.acwing.com.cn/settings/getinfo/",
             type: "GET",
             data: {
                 platform: outer.platform,
