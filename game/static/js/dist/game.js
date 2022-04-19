@@ -21,7 +21,7 @@ class AcGameMenu{
     </div>
 </div>
 `);
-        //this.$menu.hide();
+        this.$menu.hide();
         this.root.$ac_game.append(this.$menu);
         this.$single = this.$menu.find('.ac-game-menu-field-item-single-mode');
         this.$multi = this.$menu.find('.ac-game-menu-field-item-multi-mode');
@@ -206,7 +206,10 @@ class Player extends AcGameObject {
         this.friction = 0.5;
 
         this.AI_attack_time = 0;
-
+        if (this.is_me){
+            this.img = new Image();
+            this.img.src = this.playground.root.settings.photo;
+        }
         this.cur_skill = null;
     }
 
@@ -354,10 +357,20 @@ class Player extends AcGameObject {
 
     // 这里是渲染一个新的玩家，也就是一个圆形
     render() {
-        this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-        this.ctx.fillStyle = this.color;
-        this.ctx.fill();
+        if (this.is_me){
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.stroke();
+            this.ctx.clip();
+            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+            this.ctx.restore();
+        }else{
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.fillStyle = this.color;
+            this.ctx.fill();
+        }
     }
 }
 class FireBall extends AcGameObject {
@@ -479,6 +492,10 @@ class Settings {
         this.root = root;
         this.platform = "WEB";
         if (this.root.AcWingOS) this.platform = "ACAPP";
+
+        this.photo = "";
+        this.username = "";
+
         this.start();
     }   
     start(){
@@ -486,43 +503,49 @@ class Settings {
     }
 
 
-    register(){
+    register(){         // 打开注册界面
     }
-    login(){
+    login(){            // 打开登录界面
     }
 
     getinfo(){
         let outer = this;
-        
         $.ajax({
-            url: "https://120.79.151.96:8000/settings/getinfo/",
+            url: "https://app1495.acapp.acwing.com.cn/settings/getinfo/",
             type: "GET",
             data: {
                 platform: outer.platform,
             },
             success: function(resp){
                 console.log(resp);
-                console.log("create ac_game");
                 if (resp.result === "success"){
+
+                    outer.photo = resp.photo;
+                    outer.username = resp.username;
+
                     outer.hide();
                     outer.root.menu.show();
-
                 }else{
                     outer.login();
                 }
             }
         })
     }
-    hide(){}
-    show(){}
+    hide(){
+
+    }
+
+    show(){
+
+    }
 }
 export class AcGame {
-    constructor(id, AcWingOS) {
+    constructor(id, AcWingOS) {     // AcWingOS就是用于判断当前的前端是不是AcWing，现在暂时认为有这个参数就是在AcWingOS里面执行的，否则就是在WEB里面执行的
         this.id = id;
         this.$ac_game = $('#' + id);
         this.AcWingOS = AcWingOS;
 
-       // this.settings = new Settings(this);
+        this.settings = new Settings(this);
         this.menu = new AcGameMenu(this);
         this.playground = new AcGamePlayground(this);
 

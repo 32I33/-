@@ -3,6 +3,10 @@ class Settings {
         this.root = root;
         this.platform = "WEB";
         if (this.root.AcWingOS) this.platform = "ACAPP";
+
+        this.photo = "";
+        this.username = "";
+
         this.start();
     }   
     start(){
@@ -10,33 +14,39 @@ class Settings {
     }
 
 
-    register(){
+    register(){         // 打开注册界面
     }
-    login(){
+    login(){            // 打开登录界面
     }
 
     getinfo(){
         let outer = this;
-        
         $.ajax({
-            url: "https://120.79.151.96:8000/settings/getinfo/",
+            url: "https://app1495.acapp.acwing.com.cn/settings/getinfo/",
             type: "GET",
             data: {
                 platform: outer.platform,
             },
             success: function(resp){
                 console.log(resp);
-                console.log("create ac_game");
                 if (resp.result === "success"){
+
+                    outer.photo = resp.photo;
+                    outer.username = resp.username;
+
                     outer.hide();
                     outer.root.menu.show();
-
                 }else{
                     outer.login();
                 }
             }
         })
     }
-    hide(){}
-    show(){}
+    hide(){
+
+    }
+
+    show(){
+
+    }
 }
