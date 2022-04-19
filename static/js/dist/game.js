@@ -207,7 +207,6 @@ class Player extends AcGameObject {
 
         this.AI_attack_time = 0;
 
-
         this.cur_skill = null;
     }
 
@@ -224,23 +223,28 @@ class Player extends AcGameObject {
 
     add_listening_events(is_me) {
         let outer = this;
+
         this.playground.game_map.$canvas.on("contextmenu", function() {  // 暂时不知道这个是做什么的
-            return false;
-        });
+            return false;});
 
-        this.playground.game_map.$canvas.mousedown(function(e){         // e表示当前的鼠标点击：1表示右键，2表示滚轮，3表示左键
-            if (e.which === 3) {
-                console.log(e.clientX, e.clientY);
-                outer.move_to(e.clientX, e.clientY);
-            }else if(e.which === 1) {
-                if (outer.cur_skill === "fireball") {
-                    outer.shoot_fireball(e.clientX, e.clientY);
+        this.playground.game_map.$canvas.mousedown(function(e){
+            const rect = outer.ctx.canvas.getBoundingClientRect(); // 从canvas里面获取这个画布的矩形框框
+            let ee = e.which;
+            let tx = e.clientX - rect.left, ty = e.clientY - rect.top; // 相对于画布上的坐标
 
+            if (ee === 3)
+            {
+                outer.move_to(tx, ty);
+            }
+            else if (ee === 1)
+            {
+                if (outer.cur_skill === "fireball")
+                {
+                    outer.shoot_fireball(tx, ty);
                 }
                 outer.cur_skill = null;
             }
         });
-
         $(window).keydown(function(e) {                     // 这个是获取键盘输入按键的！
             if (e.which === 81) {       // q键
                 outer.cur_skill = "fireball";
@@ -248,7 +252,6 @@ class Player extends AcGameObject {
                 return false;
             }
         });
-
 
     };
 
@@ -492,7 +495,7 @@ class Settings {
         let outer = this;
         
         $.ajax({
-            url: "https://app1495.acapp.acwing.com.cn/settings/getinfo/",
+            url: "https://120.79.151.96:8000/settings/getinfo/",
             type: "GET",
             data: {
                 platform: outer.platform,
@@ -519,9 +522,11 @@ export class AcGame {
         this.$ac_game = $('#' + id);
         this.AcWingOS = AcWingOS;
 
-        this.settings = new Settings(this);
+       // this.settings = new Settings(this);
         this.menu = new AcGameMenu(this);
         this.playground = new AcGamePlayground(this);
+
+        this.start();
     }
 
     // start就是一个构造函数的延申，通过他来做init
