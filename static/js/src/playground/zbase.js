@@ -11,6 +11,9 @@ class AcGamePlayground {
         this.players = [];
         this.colors = ["blue", "red", "yellow", "green", "purple"];
 
+        // default hide();
+        this.hide();
+
         this.start();
     };
 
