@@ -87,6 +87,7 @@ class Settings {
         this.$login_password = this.$login.find(`.ac-game-settings-password`);
         this.$login_submit = this.$login.find(`.ac-game-settings-submit`);
         this.$login_option = this.$login.find(`.ac-game-settings-option`);
+        this.$login_error_message = this.$login.find(`.ac-game-settings-error-message`);
         this.$login.hide();
 
 
@@ -96,6 +97,7 @@ class Settings {
         this.$register_pswdconfirm = this.$register.find(`.ac-game-settings-password-second`);
         this.$register_option = this.$register.find(`.ac-game-settings-option`);
         this.$register_submit = this.$register.find(`.ac-game-settings-submit`);
+        this.$register_error_message = this.$register.find(`.ac-game-settings-error-message`);
         this.$register.hide();
 
         this.root.$ac_game.append(this.$settings);
@@ -111,24 +113,64 @@ class Settings {
     }
 
     add_listening_events() {
-        this.add_listening_option_login();
-        this.add_listening_option_register();
+        this.add_listening_event_login();
+        this.add_listening_event_register();
     }
 
-    add_listening_option_login() {
+    add_listening_event_login() {
         let outer = this;
         this.$login_option.click(function(){
             outer.$login.hide();
             outer.$register.show();
         })
+
+        this.$login_submit.click(function() {
+            outer.login_on_remote();
+        })
     }
 
-    add_listening_option_register() {
+    add_listening_event_register() {
         let outer = this;
         this.$register_option.click(function(){
             outer.$register.hide();
             outer.$login.show();
         })
+
+        this.$register_submit.click(function(){
+            outer.register_on_remote();
+        })
+    }
+
+    login_on_remote() {
+        let outer = this;
+        let username = this.$login_username.val();
+        let password = this.$login_password.val();
+        console.log(username, password);
+
+        $.ajax ({
+            url: "https://app1495.acapp.acwing.com.cn/settings/login/",
+    
+            type:"GET",
+            data: {
+                username:username,
+                password:password,
+            },
+            success: function(resp) {
+                console.log(username);
+                console.log(password);
+                console.log(resp);
+                if (resp.result === "success") {
+                    location.reload();
+                } else {
+                    outer.$login_error_message.html(resp.result);
+                }
+            }
+        })
+    }
+
+    register_on_remote() {
+        let outer = this;
+        
     }
 
     register(){         // 打开注册界面
@@ -153,11 +195,11 @@ class Settings {
 
                 if (resp.result === "success"){
 
-                    // outer.photo = resp.photo;
-                    // outer.username = resp.username;
+                    outer.photo = resp.photo;
+                    outer.username = resp.username;
 
-                    // outer.hide();
-                    // outer.root.menu.show();
+                    outer.hide();
+                    outer.root.menu.show();
                 }else{
                     outer.login();
                 }
