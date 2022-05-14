@@ -576,8 +576,8 @@ class Settings {
  `)
 
         this.$login = this.$settings.find('.ac-game-settings-login');
-        this.$login_username = this.$login.find(`.ac-game-settings-username`);
-        this.$login_password = this.$login.find(`.ac-game-settings-password`);
+        this.$login_username = this.$login.find(`.ac-game-settings-username input`);
+        this.$login_password = this.$login.find(`.ac-game-settings-password input`);
         this.$login_submit = this.$login.find(`.ac-game-settings-submit`);
         this.$login_option = this.$login.find(`.ac-game-settings-option`);
         this.$login_error_message = this.$login.find(`.ac-game-settings-error-message`);
@@ -585,9 +585,9 @@ class Settings {
 
 
         this.$register = this.$settings.find('.ac-game-settings-register');
-        this.$register_username = this.$register.find(`.ac-game-settings-username`);
-        this.$register_password = this.$register.find(`.ac-game-settings-password-first`);
-        this.$register_pswdconfirm = this.$register.find(`.ac-game-settings-password-second`);
+        this.$register_username = this.$register.find(`.ac-game-settings-username input`);
+        this.$register_password1 = this.$register.find(`.ac-game-settings-password-first input`);
+        this.$register_password2 = this.$register.find(`.ac-game-settings-password-second input`);
         this.$register_option = this.$register.find(`.ac-game-settings-option`);
         this.$register_submit = this.$register.find(`.ac-game-settings-submit`);
         this.$register_error_message = this.$register.find(`.ac-game-settings-error-message`);
@@ -642,15 +642,12 @@ class Settings {
 
         $.ajax ({
             url: "https://app1495.acapp.acwing.com.cn/settings/login/",
-    
             type:"GET",
             data: {
                 username:username,
                 password:password,
             },
             success: function(resp) {
-                console.log(username);
-                console.log(password);
                 console.log(resp);
                 if (resp.result === "success") {
                     location.reload();
@@ -663,7 +660,33 @@ class Settings {
 
     register_on_remote() {
         let outer = this;
-        
+        let username = this.$register_username.val();
+        let password1 = this.$register_password1.val();
+        let password2 = this.$register_password2.val();
+        console.log(username, password1, password2);
+        if (password1 !== password2) {
+            this.$register_error_message.html("密码与确认密码不一致");
+            this.$register_password1.empty();
+            this.$register_password2.empty();
+            return;
+        } else {
+            $.ajax ({
+                url:"https://app1495.acapp.acwing.com.cn/settings/register/",
+                type: "GET",
+                data: {
+                    username: username,
+                    password: password1,
+                },
+                success: function(resp) {
+                    if (resp.result === "success") {
+                        console.log("success register");
+                        location.reload();
+                    } else {
+                        outer.$register_error_message.html(resp.result);
+                    }
+                }
+            })
+        }
     }
 
     register(){         // 打开注册界面
@@ -692,6 +715,7 @@ class Settings {
                     outer.username = resp.username;
 
                     outer.hide();
+                    outer.$settings.hide();
                     outer.root.menu.show();
                 }else{
                     outer.login();
