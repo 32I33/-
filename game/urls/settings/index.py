@@ -2,10 +2,12 @@ from django.urls import path
 from game.views.settings.getinfo import getinfo
 from game.views.settings.login import signin
 from game.views.settings.register import register
+from game.views.settings.logout import signout
 
 urlpatterns = [
     path("getinfo/", getinfo, name="settings_getinfo"),      # 第一个参数是路径名字，第二个参数名是函数，第三个是名字
     path("login/", signin, name="settings_login"),
     path("register/", register, name="settings_register"),
+    path("logout/", signout, name="settings_logout"),
 ]
 

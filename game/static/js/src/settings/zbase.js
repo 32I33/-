@@ -165,6 +165,27 @@ class Settings {
         })
     }
 
+    logout_on_remote() {
+        let outer = this;
+        if (this.platform === "ACAPP") {
+            this.root.AcWingOS.api.window.close();          // AcWing上面的窗口关闭
+        } else {
+            $.ajax({
+                url: "https://app1495.acapp.acwing.com.cn/settings/logout/",
+                type: "GET",
+                success: function(resp){
+                    if (resp.result === "success") {
+                        // 刷新之后会回到登陆界面，因为是未授权状态
+                        console.log("logout success");
+                        location.reload();
+                    } else {
+                        return resp.result;
+                    }
+                }
+            })
+        }
+    }
+
     register_on_remote() {
         let outer = this;
         let username = this.$register_username.val();

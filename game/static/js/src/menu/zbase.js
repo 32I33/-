@@ -15,8 +15,9 @@ class AcGameMenu{
         </div>
         <br>
         <div class="ac-game-menu-field-item ac-game-menu-field-item-settings-mode">
-            设置
+            退出
         </div>
+        <div class="ac-game-menu-field-warning ac-game-menu-field-warning-nopermission></div>
 
     </div>
 </div>
@@ -26,6 +27,7 @@ class AcGameMenu{
         this.$single = this.$menu.find('.ac-game-menu-field-item-single-mode');
         this.$multi = this.$menu.find('.ac-game-menu-field-item-multi-mode');
         this.$settings = this.$menu.find('.ac-game-menu-field-item-settings-mode');
+        this.$warning_nopermission = this.$menu.find('.ac-game-menu-field-warning-nopermission')
         this.start();
     }
     start() {
@@ -43,6 +45,8 @@ class AcGameMenu{
         });
         this.$settings.click(function(){
             console.log("click settings_mode!");
+            let result = outer.root.settings.logout_on_remote();
+            outer.$warning_nopermission.html(result);
         });
     }
     show() {
