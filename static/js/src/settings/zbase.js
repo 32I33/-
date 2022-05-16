@@ -110,8 +110,13 @@ class Settings {
         this.start();
     }
     start(){
-        this.getinfo();
-        this.add_listening_events();
+        if (this.platform === "WEB") {
+            this.getinfo_web();
+            this.add_listening_events();
+        }
+        else if (this.platform === "ACAPP") {
+            this.getinfo_acapp();
+        }
     }
 
     add_listening_events() {
@@ -248,7 +253,36 @@ class Settings {
         this.$login.show();
     }
 
-    getinfo(){
+    // 这里的在这里进行的是用AcWing的api来进行拿到授权码之后拿访问令牌
+    acapp_login(appid, redirect_uri, state, scope) {
+        this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope,state, function(resp){
+            // 通过该函数(callback)来接受的内容
+            console.log("called from acapp function");
+            console.log(resp);
+            if (resp.result === "success"){
+                outer.username = resp.username;
+                outer.photo = resp.photo;
+                outer.hide();
+                outer.root.menu.show();
+            }
+        })
+    }
+
+    getinfo_acapp() {
+        let outer = this;
+        $.ajax({
+            url: "https://app1495.acapp.acwing.com.cn/settings/acwing/acapp/apply_code/",
+            type: "GET",
+            success: function(resp) {
+                console.log(resp);
+                if (resp.result === "success") {
+                    outer.acapp_login(resp.appid,resp.redirect_uri, resp.state, resp.scope);
+                }
+            }
+        })
+    }
+
+    getinfo_web(){
         let outer = this;
         $.ajax({
             url: "https://app1495.acapp.acwing.com.cn/settings/getinfo/",
