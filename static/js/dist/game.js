@@ -597,6 +597,8 @@ class Settings {
         this.$register_error_message = this.$register.find(`.ac-game-settings-error-message`);
         this.$register.hide();
 
+        this.$acwing_login = this.$settings.find(`.ac-game-settings-acwing img`);
+
         this.root.$ac_game.append(this.$settings);
 
         this.photo = "";
@@ -612,6 +614,9 @@ class Settings {
     add_listening_events() {
         this.add_listening_event_login();
         this.add_listening_event_register();
+
+        // 点击acwing图标然后授权登录
+        this.add_listening_event_acwing_login();
     }
 
     add_listening_event_login() {
@@ -635,6 +640,23 @@ class Settings {
 
         this.$register_submit.click(function(){
             outer.register_on_remote();
+        })
+    }
+
+    add_listening_event_acwing_login() {
+        let outer = this;
+        this.$acwing_login.click(function() {
+            $.ajax({
+                url:"https://app1495.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
+                type: "GET",
+                success: function(resp) {
+                    console.log(resp);
+                    if (resp.result === "success") {
+                        console.log(resp);
+                        window.location.replace(resp.apply_code_url);
+                    }
+                }
+            })
         })
     }
 
