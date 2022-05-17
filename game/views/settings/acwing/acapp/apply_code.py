@@ -15,6 +15,7 @@ def apply_code(request):
     scope = "userinfo"
     state = get_state()
     cache.set(state, True, 7200)    # 前面的两个参数是key value对，有效时长为2小时
+    print(cache.keys('*'))
     return JsonResponse({
         'result': "success",
         'appid': appid,

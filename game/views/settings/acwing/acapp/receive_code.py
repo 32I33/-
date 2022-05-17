@@ -9,7 +9,7 @@ from random import randint
 
 def receive_code(request):
     data = request.GET          # 这里的GET相当于acwing来访问我们的网络, 传回来给我们code（授权码）
-
+   # return JsonResponse({})
     if "errcode" in request:
         return JsonResponse({
             'result': "fail to apply code",
@@ -36,8 +36,8 @@ def receive_code(request):
     openid = access_token_res['openid']
 
     # id判断是否已经在里面了
-    player = Player.objects.filter(openid=openid)
-    if player.exists():
+    players = Player.objects.filter(openid=openid)
+    if players.exists():
         player = players[0] # 当前的用户就是player[0]，为什么？
         return JsonResponse({
             'result': "success",

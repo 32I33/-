@@ -255,14 +255,15 @@ class Settings {
 
     // 这里的在这里进行的是用AcWing的api来进行拿到授权码之后拿访问令牌
     acapp_login(appid, redirect_uri, state, scope) {
-        this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope,state, function(resp){
+        let outer = this;
+        this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp){
             // 通过该函数(callback)来接受的内容
             console.log("called from acapp function");
             console.log(resp);
             if (resp.result === "success"){
                 outer.username = resp.username;
                 outer.photo = resp.photo;
-                outer.hide();
+                outer.$settings.hide();
                 outer.root.menu.show();
             }
         })

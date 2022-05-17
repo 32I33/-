@@ -1,6 +1,6 @@
 class Player extends AcGameObject {
-    // speed 表示每秒移动的百分比是多少（长度和高度）, is_me判断一下是不是自己
-    constructor(playground, x, y, radius, color, speed, is_me) {
+    // speed 表示每秒移动的百分比是多少（长度和高度）, character判断一下是不是自己
+    constructor(playground, x, y, radius, color, speed, character) {
         super();
         this.x = x;
         this.y = y;
@@ -12,8 +12,8 @@ class Player extends AcGameObject {
         this.color = color;
         this.move_length = 0;
         this.speed = speed;
-        this.is_me = is_me;
-        this.eps = 0.1;     // eps表示小于0.1就算0，因为会涉及浮点运算
+        this.character = character;
+        this.eps = 0.01;     // eps表示小于0.1就算0，因为会涉及浮点运算
 
         this.damage_x = 0;
         this.damage_y = 0;
@@ -21,7 +21,7 @@ class Player extends AcGameObject {
         this.friction = 0.5;
 
         this.AI_attack_time = 0;
-        if (this.is_me){
+        if (this.character === "me"){
             this.img = new Image();
             this.img.src = this.playground.root.settings.photo;
         }
@@ -29,17 +29,17 @@ class Player extends AcGameObject {
     }
 
     start(){
-        if (this.is_me){
-            this.add_listening_events(this.is_me);
+        if (this.character === "me"){
+            this.add_listening_events(this.character);
         }else{
-            let tx = Math.random() * this.playground.width;
-            let ty = Math.random() * this.playground.height;
+            let tx = Math.random() * this.playground.width / this.playground.scale;
+            let ty = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(tx, ty);
         }
 
     }
 
-    add_listening_events(is_me) {
+    add_listening_events(character) {
         let outer = this;
 
         this.playground.game_map.$canvas.on("contextmenu", function() {  // 暂时不知道这个是做什么的
@@ -48,7 +48,7 @@ class Player extends AcGameObject {
         this.playground.game_map.$canvas.mousedown(function(e){
             const rect = outer.ctx.canvas.getBoundingClientRect(); // 从canvas里面获取这个画布的矩形框框
             let ee = e.which;
-            let tx = e.clientX - rect.left, ty = e.clientY - rect.top; // 相对于画布上的坐标
+            let tx =(e.clientX - rect.left) / outer.playground.scale, ty = (e.clientY - rect.top) / outer.playground.scale; // 相对于画布上的坐标
 
             if (ee === 3)
             {
@@ -102,16 +102,15 @@ class Player extends AcGameObject {
 
     shoot_fireball(tx, ty) {
         let x = this.x, y = this.y;
-        let radius = this.playground.height * 0.01;
+        let radius = 0.01;
         let angle = Math.atan2(ty - this.y, tx - this.x);
         let vx = Math.cos(angle);
         let vy = Math.sin(angle);
         let color = "orange";
-        let speed = this.playground.height * 0.5;
-        let move_length = this.playground.height * 1;
-        let damage = this.playground.height * 0.01;        // 想当于玩家的0.05的百分之二十的血量
+        let speed = 0.5;
+        let move_length = 1;
+        let damage = 0.01;        // 想当于玩家的0.05的百分之二十的血量
         new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, damage);
-
     }
 
     get_dist(x1, y1, x2, y2){
@@ -130,8 +129,13 @@ class Player extends AcGameObject {
     }
 
     update(){
+        this.update_move();
+        this.render();
+    }
+
+    update_move() {
         this.AI_attack_time += this.timedelta / 1000;
-        if (!this.is_me && this.AI_attack_time > 5 && Math.random() < 1 / 300 ) {
+        if (this.character === "robot" && this.AI_attack_time > 5 && Math.random() < 1 / 300 ) {
 
             let t = Math.floor(this.playground.players.length * Math.random());
             let target = this.playground.players[t];
@@ -151,9 +155,9 @@ class Player extends AcGameObject {
             if (this.move_length < this.eps) {
                 this.move_length = 0;
                 this.vx = this.vy = 0;
-                if (this.is_me == false) {
-                    let tx = Math.random() * this.playground.width;
-                    let ty = Math.random() * this.playground.height;
+                if (this.character === "robot") {
+                    let tx = Math.random() * this.playground.width / this.playground.scale;
+                    let ty = Math.random() * this.playground.height / this.playground.scale;
                     this.move_to(tx, ty);
                 }
             }else{
@@ -165,24 +169,25 @@ class Player extends AcGameObject {
             }
 
         }
-        this.render();
+
     }
 
 
 
     // 这里是渲染一个新的玩家，也就是一个圆形
     render() {
-        if (this.is_me){
+        let scale = this.playground.scale;
+        if (this.character === "me"){
             this.ctx.save();
             this.ctx.beginPath();
-            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             this.ctx.stroke();
             this.ctx.clip();
-            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+            this.ctx.drawImage(this.img, (this.x - this.radius) * scale, (this.y - this.radius) * scale, this.radius * 2 * scale, this.radius * 2 * scale);
             this.ctx.restore();
         }else{
             this.ctx.beginPath();
-            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             this.ctx.fillStyle = this.color;
             this.ctx.fill();
         }

@@ -13,7 +13,7 @@ class FireBall extends AcGameObject {
         this.color = color;
         this.speed = speed;
         this.move_length = move_length;
-        this.eps = 0.1;
+        this.eps = 0.01;
 
         this.damage = damage;
         this.cur_skill = null;              // 当前的技能为空
@@ -52,8 +52,6 @@ class FireBall extends AcGameObject {
     attack(player){
         let angle = Math.atan2(player.y - this.y, player.x - this.x);
         // 被攻击的角度跟伤害
-        console.log("Damage: ",this.damage);
-        console.log("player.x.y: ", player.x, player.y);
 
         player.attacked(angle, this.damage);
         // console.log("return: ", t);
@@ -69,8 +67,9 @@ class FireBall extends AcGameObject {
     }
 
     render() {
+        let scale = this.playground.scale;
         this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2 ,false);
+        this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2 ,false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
     }
