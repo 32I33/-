@@ -42,6 +42,8 @@ class AcGameMenu{
         });
         this.$multi.click(function() {
             console.log("click multi_mode!");
+            outer.$menu.hide();
+            outer.root.playground.show("multi mode");
         });
         this.$settings.click(function(){
             console.log("click settings_mode!");

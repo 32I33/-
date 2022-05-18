@@ -1,6 +1,6 @@
 class Player extends AcGameObject {
     // speed 表示每秒移动的百分比是多少（长度和高度）, character判断一下是不是自己
-    constructor(playground, x, y, radius, color, speed, character) {
+    constructor(playground, x, y, radius, color, speed, character, username, photo) {
         super();
         this.x = x;
         this.y = y;
@@ -8,11 +8,13 @@ class Player extends AcGameObject {
         this.vy = 0;
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
+        this.character = character;
+        this.username = username;
+        this.photo = photo;
         this.radius = radius;
         this.color = color;
         this.move_length = 0;
         this.speed = speed;
-        this.character = character;
         this.eps = 0.01;     // eps表示小于0.1就算0，因为会涉及浮点运算
 
         this.damage_x = 0;
@@ -21,17 +23,21 @@ class Player extends AcGameObject {
         this.friction = 0.5;
 
         this.AI_attack_time = 0;
-        if (this.character === "me"){
+        if (this.character !== "robot"){
             this.img = new Image();
-            this.img.src = this.playground.root.settings.photo;
+            this.img.src = this.photo;
+            if (character === "enemy") {
+                console.log(this.img.src);
+            }
         }
         this.cur_skill = null;
+        console.log("The info:", this.uuid, this.username, this.photo);
     }
 
     start(){
         if (this.character === "me"){
             this.add_listening_events(this.character);
-        }else{
+        }else {
             let tx = Math.random() * this.playground.width / this.playground.scale;
             let ty = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(tx, ty);
@@ -177,7 +183,7 @@ class Player extends AcGameObject {
     // 这里是渲染一个新的玩家，也就是一个圆形
     render() {
         let scale = this.playground.scale;
-        if (this.character === "me"){
+        if (this.character !== "robot"){
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);

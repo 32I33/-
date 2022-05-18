@@ -7,9 +7,21 @@ class AcGameObject {
         // 标记一下看是否有被调用start函数，bool值
         this.has_called_start = false;
         this.timedelta = 0;     // 当前帧距离上一帧的时间间隔(ms)
+        this.uuid = this.create_uuid();
+        console.log(this.uuid);
     }
 
     start() {       // 只会在第一帧执行一次
+    }
+
+    create_uuid() {
+        let res = "";
+        for (let i = 0; i < 8; i ++ ) {
+            let num = Math.floor(Math.random() * 10);
+            res += num;
+        }
+
+        return res;
     }
 
     update() {      // 每一帧都会执行一次

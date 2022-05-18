@@ -20,7 +20,6 @@ class AcGamePlayground {
     start() {
         let outer = this;
         $(window).resize(function() {
-            console.log("resize");
             outer.resize();
         });
     }
@@ -39,16 +38,27 @@ class AcGamePlayground {
     }
 
     show(mode){         // 打开playground界面
+        let outer = this;
         this.$playground.show();
         this.game_map = new GameMap(this);
         this.width = this.$playground.width();
         this.height = this.$playground.height();
         this.resize();
-        if (mode == "single mode"){
-            this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "blue", 0.15, "me"));
 
+        // 加入玩家（单人模式则加入robot）
+        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
+
+        if (mode == "single mode"){
             for (let i = 0; i < 5; i ++ ) {
                 this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, this.colors[Math.floor(Math.random() * 5)], 0.15, "robot"));
+            }
+        }
+        else if (mode === "multi mode"){
+            // 为什么在这里加入我们的玩家信息？由于我们里面的Socket只是一个链接，他可以帮助很多事件创立链接，不代表玩家的信息，因此需要再playground里面加入我们的玩家的信息，这个看具体业务具体逻辑
+            this.mps = new MultiPlayerSocket(this);
+            this.mps.uuid = this.players[0].uuid;                // 玩家0一直是我们自己，只有说创建了连接之后才会把其他的玩家加进来
+            this.mps.ws.onopen = function() {
+                outer.mps.send_create_player(outer.root.settings.username, outer.root.settings.photo);
             }
         }
     }
@@ -56,3 +66,4 @@ class AcGamePlayground {
         this.$playground.hide();
     }
 }
+

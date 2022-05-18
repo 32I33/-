@@ -42,6 +42,8 @@ class AcGameMenu{
         });
         this.$multi.click(function() {
             console.log("click multi_mode!");
+            outer.$menu.hide();
+            outer.root.playground.show("multi mode");
         });
         this.$settings.click(function(){
             console.log("click settings_mode!");
@@ -65,9 +67,21 @@ class AcGameObject {
         // 标记一下看是否有被调用start函数，bool值
         this.has_called_start = false;
         this.timedelta = 0;     // 当前帧距离上一帧的时间间隔(ms)
+        this.uuid = this.create_uuid();
+        console.log(this.uuid);
     }
 
     start() {       // 只会在第一帧执行一次
+    }
+
+    create_uuid() {
+        let res = "";
+        for (let i = 0; i < 8; i ++ ) {
+            let num = Math.floor(Math.random() * 10);
+            res += num;
+        }
+
+        return res;
     }
 
     update() {      // 每一帧都会执行一次
@@ -163,7 +177,7 @@ class Particle extends AcGameObject {
         this.move_length = move_length;
         this.friction = 0.9;
 
-        this.eps = 10;
+        this.eps = 0.01;
     }
 
 
@@ -189,8 +203,9 @@ class Particle extends AcGameObject {
         this.render();
     }
     render() {
+        let scale = this.playground.scale;
         this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
     }
@@ -199,7 +214,7 @@ class Particle extends AcGameObject {
 }
 class Player extends AcGameObject {
     // speed 表示每秒移动的百分比是多少（长度和高度）, character判断一下是不是自己
-    constructor(playground, x, y, radius, color, speed, character) {
+    constructor(playground, x, y, radius, color, speed, character, username, photo) {
         super();
         this.x = x;
         this.y = y;
@@ -207,11 +222,13 @@ class Player extends AcGameObject {
         this.vy = 0;
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
+        this.character = character;
+        this.username = username;
+        this.photo = photo;
         this.radius = radius;
         this.color = color;
         this.move_length = 0;
         this.speed = speed;
-        this.character = character;
         this.eps = 0.01;     // eps表示小于0.1就算0，因为会涉及浮点运算
 
         this.damage_x = 0;
@@ -220,17 +237,21 @@ class Player extends AcGameObject {
         this.friction = 0.5;
 
         this.AI_attack_time = 0;
-        if (this.character === "me"){
+        if (this.character !== "robot"){
             this.img = new Image();
-            this.img.src = this.playground.root.settings.photo;
+            this.img.src = this.photo;
+            if (character === "enemy") {
+                console.log(this.img.src);
+            }
         }
         this.cur_skill = null;
+        console.log("The info:", this.uuid, this.username, this.photo);
     }
 
     start(){
         if (this.character === "me"){
             this.add_listening_events(this.character);
-        }else{
+        }else {
             let tx = Math.random() * this.playground.width / this.playground.scale;
             let ty = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(tx, ty);
@@ -376,7 +397,7 @@ class Player extends AcGameObject {
     // 这里是渲染一个新的玩家，也就是一个圆形
     render() {
         let scale = this.playground.scale;
-        if (this.character === "me"){
+        if (this.character !== "robot"){
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
@@ -469,6 +490,61 @@ class FireBall extends AcGameObject {
     }
 
 }
+class MultiPlayerSocket {
+    constructor(playground) {
+        this.playground = playground;
+        // 通过在playground的时候已经定义了this.mps = new MultiPlayerSocket了，并且定义了uuid(players[0])以及开启了onopen
+
+        this.ws = new WebSocket("wss://app1495.acapp.acwing.com.cn/wss/multiplayer/");
+
+        this.start();
+    }
+
+    start() {
+        this.receive();
+    }
+    // 前端这里收到后端传回来的信息
+    receive() {
+        let outer = this;
+        this.ws.onmessage = function(e) {
+            let data = JSON.parse(e.data);              // 把其重新字典化
+            let event = data.event;
+            let uuid = data.uuid;
+            let username = data.username;
+            let photo = data.photo;
+            if (uuid == outer.uuid) return false;       // 表明当前的uuid是我自己
+            if (event === "create player") {
+                outer.receive_create_player(uuid, username, photo);
+            }
+        };
+    }
+
+    send_create_player(username, photo) {
+        let outer = this;
+        this.ws.send(JSON.stringify({            // 将其字符串化
+            'event': "create player",
+            'uuid': outer.uuid,
+            'username': username,
+            'photo': photo,
+        }))
+    }
+
+    receive_create_player(uuid, username, photo) {
+        let player = new Player(
+            this.playground,
+            this.playground.width / 2 / this.playground.scale,
+            0.5,
+            0.05,
+            "white",
+            0.15,
+            "enemy",
+            username,
+            photo
+        );
+        player.uuid = uuid;         // 注意这里还要加上我们这名玩家的uuid
+        this.playground.players.push(player);
+    }
+}
 class AcGamePlayground {
     constructor(root) {
         this.root = root;
@@ -491,7 +567,6 @@ class AcGamePlayground {
     start() {
         let outer = this;
         $(window).resize(function() {
-            console.log("resize");
             outer.resize();
         });
     }
@@ -510,16 +585,27 @@ class AcGamePlayground {
     }
 
     show(mode){         // 打开playground界面
+        let outer = this;
         this.$playground.show();
         this.game_map = new GameMap(this);
         this.width = this.$playground.width();
         this.height = this.$playground.height();
         this.resize();
-        if (mode == "single mode"){
-            this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "blue", 0.15, "me"));
 
+        // 加入玩家（单人模式则加入robot）
+        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
+
+        if (mode == "single mode"){
             for (let i = 0; i < 5; i ++ ) {
                 this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, this.colors[Math.floor(Math.random() * 5)], 0.15, "robot"));
+            }
+        }
+        else if (mode === "multi mode"){
+            // 为什么在这里加入我们的玩家信息？由于我们里面的Socket只是一个链接，他可以帮助很多事件创立链接，不代表玩家的信息，因此需要再playground里面加入我们的玩家的信息，这个看具体业务具体逻辑
+            this.mps = new MultiPlayerSocket(this);
+            this.mps.uuid = this.players[0].uuid;                // 玩家0一直是我们自己，只有说创建了连接之后才会把其他的玩家加进来
+            this.mps.ws.onopen = function() {
+                outer.mps.send_create_player(outer.root.settings.username, outer.root.settings.photo);
             }
         }
     }
@@ -527,6 +613,7 @@ class AcGamePlayground {
         this.$playground.hide();
     }
 }
+
 class Settings {
     constructor(root){
         this.root = root;
