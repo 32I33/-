@@ -31,9 +31,9 @@ class MultiPlayer(AsyncWebsocketConsumer):
             # 每次传回去一个玩家然后再传下一个玩家，然后最后会前端会渲染一个一个传进来的玩家
             await self.send(text_data=json.dumps({
                 'event': "create player",
-                'uuid': player.get('uuid'),
-                'username': player.get('username'),
-                'photo': player.get('photo')
+                'uuid': player['uuid'],
+                'username': player['username'],
+                'photo': player['photo'],
             }))
 
         await self.channel_layer.group_add(self.room_name, self.channel_name)   # 把当前这个房间加到每一个频道里面，通过此告诉每一个频道里面的players、房间信息
@@ -55,14 +55,40 @@ class MultiPlayer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(            # 新加进来的人的这条信息群发到每一个channel
             self.room_name,
             {
-                'type': "group_create_player",          # 知识点：type里面是使用调用group_send()内其他信息的函数，并且是写在当前里面
+                'type': "group_send",          # 知识点：type里面是使用调用group_send()内其他信息的函数，并且是写在当前里面
                 'event': "create player",
                 'uuid': data['uuid'],
                 'username': data['username'],
                 'photo': data['photo']
             }
         )
-    async def group_create_player(self, data):
+
+    async def move_to(self, data):
+        await self.channel_layer.group_send(
+            self.room_name,
+            {
+                'type': "group_send",
+                "event": "move_to",
+                "uuid": data['uuid'],
+                "tx": data['tx'],
+                "ty": data['ty'],
+            }
+        )
+
+    async def shoot_fireball(self, data):
+        await self.channel_layer.group_send(
+            self.room_name,
+            {
+                "type": "group_send",
+                "event": "shoot_ball",
+                "uuid": data['uuid'],
+                "tx": data['tx'],
+                "ty": data['ty'],
+                "ball_uuid": data['ball_uuid'],
+            }
+        )
+
+    async def group_send(self, data):
         # 发送给前端当前的玩家信息，并且是一个一个发
         await self.send(text_data=json.dumps(data))
 
@@ -72,3 +98,11 @@ class MultiPlayer(AsyncWebsocketConsumer):
         if event == "create player":
             print("receive")
             await self.create_player(data)
+        elif event == "move_to":
+            await self.move_to(data)
+        elif event == "shoot fireball":
+            await self.shoot_fireball(data)
+
+
+
+

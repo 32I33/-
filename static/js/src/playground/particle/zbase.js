@@ -25,7 +25,6 @@ class Particle extends AcGameObject {
     }
 
     start(){
-        console.log("particle create");
     };
     update() {
         if (this.move_length < this.eps || this.speed < this.eps) {

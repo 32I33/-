@@ -8,7 +8,6 @@ class AcGameObject {
         this.has_called_start = false;
         this.timedelta = 0;     // 当前帧距离上一帧的时间间隔(ms)
         this.uuid = this.create_uuid();
-        console.log(this.uuid);
     }
 
     start() {       // 只会在第一帧执行一次

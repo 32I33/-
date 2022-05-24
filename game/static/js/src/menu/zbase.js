@@ -41,12 +41,10 @@ class AcGameMenu{
             outer.root.playground.show("single mode");
         });
         this.$multi.click(function() {
-            console.log("click multi_mode!");
             outer.$menu.hide();
             outer.root.playground.show("multi mode");
         });
         this.$settings.click(function(){
-            console.log("click settings_mode!");
             let result = outer.root.settings.logout_on_remote();
             outer.$warning_nopermission.html(result);
         });

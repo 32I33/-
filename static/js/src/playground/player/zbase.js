@@ -17,6 +17,7 @@ class Player extends AcGameObject {
         this.speed = speed;
         this.eps = 0.01;     // eps表示小于0.1就算0，因为会涉及浮点运算
 
+        this.fireballs = []; // 火球术
         this.damage_x = 0;
         this.damage_y = 0;
         this.damage_speed = 0;
@@ -26,18 +27,14 @@ class Player extends AcGameObject {
         if (this.character !== "robot"){
             this.img = new Image();
             this.img.src = this.photo;
-            if (character === "enemy") {
-                console.log(this.img.src);
-            }
         }
         this.cur_skill = null;
-        console.log("The info:", this.uuid, this.username, this.photo);
     }
 
     start(){
         if (this.character === "me"){
             this.add_listening_events(this.character);
-        }else {
+        }else if (this.character === "robot") {
             let tx = Math.random() * this.playground.width / this.playground.scale;
             let ty = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(tx, ty);
@@ -59,12 +56,20 @@ class Player extends AcGameObject {
             if (ee === 3)
             {
                 outer.move_to(tx, ty);
+                if (outer.playground.mode === "multi mode"){
+                    console.log("multi move");
+                    outer.playground.mps.send_move_to(outer.uuid, tx, ty);
+                }
+
             }
             else if (ee === 1)
             {
                 if (outer.cur_skill === "fireball")
                 {
-                    outer.shoot_fireball(tx, ty);
+                    let fireball = outer.shoot_fireball(tx, ty);
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_shoot_fireball(this.uuid, tx, ty, fireball.uuid);
+                    }
                 }
                 outer.cur_skill = null;
             }
@@ -83,7 +88,6 @@ class Player extends AcGameObject {
     attacked(angle, damage) {
         this.radius -= damage;
         if (this.radius < this.eps) {
-            console.log("destroy");
             this.destroy();
             return false;
         }else {
@@ -116,7 +120,14 @@ class Player extends AcGameObject {
         let speed = 0.5;
         let move_length = 1;
         let damage = 0.01;        // 想当于玩家的0.05的百分之二十的血量
-        new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, damage);
+        let fireball = new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, damage);
+        this.fireballs.push(fireball);
+
+        // 逻辑是通过真正发射得哪个地方广播到所有的player，使接收到shoot_fireball的players里面找到这个发射者，然后再在使当前的player shoot_fireball，这个时候shoot出来的uuid是不一样的，所以要传到过去真正shoot_fireball的那个fireball的uuid
+        // 因此要返回这个fireball给到
+        // 1. 发射的时候传socket到后端
+        // 2. socket从而改变当前的uuid
+        return fireball;
     }
 
     get_dist(x1, y1, x2, y2){
@@ -168,7 +179,6 @@ class Player extends AcGameObject {
                 }
             }else{
                 let moved = Math.min(this.speed * this.timedelta / 1000, this.move_length);
-                // console.log(vx, vy);
                 this.x += this.vx * moved;
                 this.y += this.vy * moved;
                 this.move_length -= moved;

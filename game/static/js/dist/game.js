@@ -41,12 +41,10 @@ class AcGameMenu{
             outer.root.playground.show("single mode");
         });
         this.$multi.click(function() {
-            console.log("click multi_mode!");
             outer.$menu.hide();
             outer.root.playground.show("multi mode");
         });
         this.$settings.click(function(){
-            console.log("click settings_mode!");
             let result = outer.root.settings.logout_on_remote();
             outer.$warning_nopermission.html(result);
         });
@@ -68,7 +66,6 @@ class AcGameObject {
         this.has_called_start = false;
         this.timedelta = 0;     // 当前帧距离上一帧的时间间隔(ms)
         this.uuid = this.create_uuid();
-        console.log(this.uuid);
     }
 
     start() {       // 只会在第一帧执行一次
@@ -187,7 +184,6 @@ class Particle extends AcGameObject {
     }
 
     start(){
-        console.log("particle create");
     };
     update() {
         if (this.move_length < this.eps || this.speed < this.eps) {
@@ -231,6 +227,7 @@ class Player extends AcGameObject {
         this.speed = speed;
         this.eps = 0.01;     // eps表示小于0.1就算0，因为会涉及浮点运算
 
+        this.fireballs = []; // 火球术
         this.damage_x = 0;
         this.damage_y = 0;
         this.damage_speed = 0;
@@ -240,18 +237,14 @@ class Player extends AcGameObject {
         if (this.character !== "robot"){
             this.img = new Image();
             this.img.src = this.photo;
-            if (character === "enemy") {
-                console.log(this.img.src);
-            }
         }
         this.cur_skill = null;
-        console.log("The info:", this.uuid, this.username, this.photo);
     }
 
     start(){
         if (this.character === "me"){
             this.add_listening_events(this.character);
-        }else {
+        }else if (this.character === "robot") {
             let tx = Math.random() * this.playground.width / this.playground.scale;
             let ty = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(tx, ty);
@@ -273,12 +266,20 @@ class Player extends AcGameObject {
             if (ee === 3)
             {
                 outer.move_to(tx, ty);
+                if (outer.playground.mode === "multi mode"){
+                    console.log("multi move");
+                    outer.playground.mps.send_move_to(outer.uuid, tx, ty);
+                }
+
             }
             else if (ee === 1)
             {
                 if (outer.cur_skill === "fireball")
                 {
-                    outer.shoot_fireball(tx, ty);
+                    let fireball = outer.shoot_fireball(tx, ty);
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_shoot_fireball(this.uuid, tx, ty, fireball.uuid);
+                    }
                 }
                 outer.cur_skill = null;
             }
@@ -297,7 +298,6 @@ class Player extends AcGameObject {
     attacked(angle, damage) {
         this.radius -= damage;
         if (this.radius < this.eps) {
-            console.log("destroy");
             this.destroy();
             return false;
         }else {
@@ -330,7 +330,14 @@ class Player extends AcGameObject {
         let speed = 0.5;
         let move_length = 1;
         let damage = 0.01;        // 想当于玩家的0.05的百分之二十的血量
-        new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, damage);
+        let fireball = new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_length, damage);
+        this.fireballs.push(fireball);
+
+        // 逻辑是通过真正发射得哪个地方广播到所有的player，使接收到shoot_fireball的players里面找到这个发射者，然后再在使当前的player shoot_fireball，这个时候shoot出来的uuid是不一样的，所以要传到过去真正shoot_fireball的那个fireball的uuid
+        // 因此要返回这个fireball给到
+        // 1. 发射的时候传socket到后端
+        // 2. socket从而改变当前的uuid
+        return fireball;
     }
 
     get_dist(x1, y1, x2, y2){
@@ -382,7 +389,6 @@ class Player extends AcGameObject {
                 }
             }else{
                 let moved = Math.min(this.speed * this.timedelta / 1000, this.move_length);
-                // console.log(vx, vy);
                 this.x += this.vx * moved;
                 this.y += this.vy * moved;
                 this.move_length -= moved;
@@ -444,20 +450,26 @@ class FireBall extends AcGameObject {
             this.destroy();
             return false;
         }
+        this.update_attack();
+        this.update_move();
 
-        let moved = Math.min(this.speed * this.timedelta / 1000, this.move_length);
-        this.x += this.vx * moved;
-        this.y += this.vy * moved;
-        this.move_length -= moved;
-
+        this.render();
+    }
+    update_attack() {
         for (let i = 0; i < this.playground.players.length; i ++ ) {
             let player = this.playground.players[i];
             if (this.player != player && this.is_collision(player)) {
                 this.attack(player);
+                break;
             }
         }
+    }
 
-        this.render();
+    update_move() {
+        let moved = Math.min(this.speed * this.timedelta / 1000, this.move_length);
+        this.x += this.vx * moved;
+        this.y += this.vy * moved;
+        this.move_length -= moved;
     }
 
     is_collision(player) {
@@ -469,10 +481,8 @@ class FireBall extends AcGameObject {
         // 被攻击的角度跟伤害
 
         player.attacked(angle, this.damage);
-        // console.log("return: ", t);
 
         this.destroy();
-        
     }
 
     get_dist(tx, ty){
@@ -487,8 +497,18 @@ class FireBall extends AcGameObject {
         this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2 ,false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
+    };
+    // 其属于是在destroy之前执行
+    on_destroy(uuid) {
+        let fireballs = this.players.fireball;
+        for (let i = 0; i < fireballs.length; i ++ ) {
+            let fireball = fireballs[i];
+            if (fireball[i] === this) {
+                fireballs.splice(i, 1);
+                break;
+            }
+        }
     }
-
 }
 class MultiPlayerSocket {
     constructor(playground) {
@@ -503,6 +523,18 @@ class MultiPlayerSocket {
     start() {
         this.receive();
     }
+
+    get_player(uuid) {
+        let players = this.playground.players;
+        for (let i = 0; i < players.length; i ++ ) {
+            let player = players[i];
+            if (player.uuid === uuid) {
+                return player;
+            }
+        }
+        return null;
+    }
+
     // 前端这里收到后端传回来的信息
     receive() {
         let outer = this;
@@ -510,11 +542,13 @@ class MultiPlayerSocket {
             let data = JSON.parse(e.data);              // 把其重新字典化
             let event = data.event;
             let uuid = data.uuid;
-            let username = data.username;
-            let photo = data.photo;
             if (uuid == outer.uuid) return false;       // 表明当前的uuid是我自己
             if (event === "create player") {
-                outer.receive_create_player(uuid, username, photo);
+                outer.receive_create_player(uuid, data.username, data.photo);
+            } else if (event === "move_to") {
+                outer.receive_move_to(uuid, data.tx, data.ty);
+            } else if (event === "shoot fireball") {
+                outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
             }
         };
     }
@@ -526,6 +560,26 @@ class MultiPlayerSocket {
             'uuid': outer.uuid,
             'username': username,
             'photo': photo,
+        }))
+    }
+    send_move_to(uuid, tx, ty) {
+        let outer = this;
+        console.log(uuid);
+        this.ws.send(JSON.stringify({
+            'event': "move_to",
+            "uuid": uuid,
+            "tx": tx,
+            "ty": ty
+        }))
+    }
+    send_shoot_fireball(uuid, tx, ty, ball_uuid) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event': "shoot fireball",
+            "uuid": uuid,
+            "tx": tx,
+            "ty": ty,
+            "ball_uuid": ball_uuid,
         }))
     }
 
@@ -544,7 +598,23 @@ class MultiPlayerSocket {
         player.uuid = uuid;         // 注意这里还要加上我们这名玩家的uuid
         this.playground.players.push(player);
     }
+
+    receive_move_to(uuid, tx, ty) {
+        let player = this.get_player(uuid);
+        if (player) {
+            player.move_to(tx, ty);
+        }
+
+    }
+    receive_shoot_fireball(uuid, tx, ty, ball_uuid) {
+        // 接受了fireball之后放进去当前的fireballs里面
+        let player = get_player(uuid);
+        let fireball = player.shoot_firball(tx, ty);
+        fireball.uuid = ball_uuid;
+    }
 }
+
+
 class AcGamePlayground {
     constructor(root) {
         this.root = root;
@@ -592,6 +662,8 @@ class AcGamePlayground {
         this.height = this.$playground.height();
         this.resize();
 
+        this.mode = mode;
+
         // 加入玩家（单人模式则加入robot）
         this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
 
@@ -602,6 +674,7 @@ class AcGamePlayground {
         }
         else if (mode === "multi mode"){
             // 为什么在这里加入我们的玩家信息？由于我们里面的Socket只是一个链接，他可以帮助很多事件创立链接，不代表玩家的信息，因此需要再playground里面加入我们的玩家的信息，这个看具体业务具体逻辑
+            // 在这里用mps来代表socket好处是其他的函数move_to, shoot_fireball, attacked都可以直接从传进去的playground拿到
             this.mps = new MultiPlayerSocket(this);
             this.mps.uuid = this.players[0].uuid;                // 玩家0一直是我们自己，只有说创建了连接之后才会把其他的玩家加进来
             this.mps.ws.onopen = function() {
@@ -774,9 +847,7 @@ class Settings {
                 url:"https://app1495.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
                 type: "GET",
                 success: function(resp) {
-                    console.log(resp);
                     if (resp.result === "success") {
-                        console.log(resp);
                         window.location.replace(resp.apply_code_url);
                     }
                 }
@@ -788,7 +859,6 @@ class Settings {
         let outer = this;
         let username = this.$login_username.val();
         let password = this.$login_password.val();
-        console.log(username, password);
 
         $.ajax ({
             url: "https://app1495.acapp.acwing.com.cn/settings/login/",
@@ -798,7 +868,6 @@ class Settings {
                 password:password,
             },
             success: function(resp) {
-                console.log(resp);
                 if (resp.result === "success") {
                     location.reload();
                 } else {
@@ -819,7 +888,6 @@ class Settings {
                 success: function(resp){
                     if (resp.result === "success") {
                         // 刷新之后会回到登陆界面，因为是未授权状态
-                        console.log("logout success");
                         location.reload();
                     } else {
                         return resp.result;
@@ -834,7 +902,6 @@ class Settings {
         let username = this.$register_username.val();
         let password1 = this.$register_password1.val();
         let password2 = this.$register_password2.val();
-        console.log(username, password1, password2);
         if (password1 !== password2) {
             this.$register_error_message.html("密码与确认密码不一致");
             this.$register_password1.empty();
@@ -850,7 +917,6 @@ class Settings {
                 },
                 success: function(resp) {
                     if (resp.result === "success") {
-                        console.log("success register");
                         location.reload();
                     } else {
                         outer.$register_error_message.html(resp.result);
@@ -874,8 +940,6 @@ class Settings {
         let outer = this;
         this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp){
             // 通过该函数(callback)来接受的内容
-            console.log("called from acapp function");
-            console.log(resp);
             if (resp.result === "success"){
                 outer.username = resp.username;
                 outer.photo = resp.photo;
@@ -891,7 +955,6 @@ class Settings {
             url: "https://app1495.acapp.acwing.com.cn/settings/acwing/acapp/apply_code/",
             type: "GET",
             success: function(resp) {
-                console.log(resp);
                 if (resp.result === "success") {
                     outer.acapp_login(resp.appid,resp.redirect_uri, resp.state, resp.scope);
                 }
@@ -908,7 +971,6 @@ class Settings {
                 platform: outer.platform,
             },
             success: function(resp){
-                console.log(resp);
 
                 if (resp.result === "success"){
 

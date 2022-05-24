@@ -29,20 +29,26 @@ class FireBall extends AcGameObject {
             this.destroy();
             return false;
         }
+        this.update_attack();
+        this.update_move();
 
-        let moved = Math.min(this.speed * this.timedelta / 1000, this.move_length);
-        this.x += this.vx * moved;
-        this.y += this.vy * moved;
-        this.move_length -= moved;
-
+        this.render();
+    }
+    update_attack() {
         for (let i = 0; i < this.playground.players.length; i ++ ) {
             let player = this.playground.players[i];
             if (this.player != player && this.is_collision(player)) {
                 this.attack(player);
+                break;
             }
         }
+    }
 
-        this.render();
+    update_move() {
+        let moved = Math.min(this.speed * this.timedelta / 1000, this.move_length);
+        this.x += this.vx * moved;
+        this.y += this.vy * moved;
+        this.move_length -= moved;
     }
 
     is_collision(player) {
@@ -54,10 +60,8 @@ class FireBall extends AcGameObject {
         // 被攻击的角度跟伤害
 
         player.attacked(angle, this.damage);
-        // console.log("return: ", t);
 
         this.destroy();
-        
     }
 
     get_dist(tx, ty){
@@ -72,6 +76,16 @@ class FireBall extends AcGameObject {
         this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2 ,false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
+    };
+    // 其属于是在destroy之前执行
+    on_destroy(uuid) {
+        let fireballs = this.players.fireball;
+        for (let i = 0; i < fireballs.length; i ++ ) {
+            let fireball = fireballs[i];
+            if (fireball[i] === this) {
+                fireballs.splice(i, 1);
+                break;
+            }
+        }
     }
-
 }

@@ -158,9 +158,7 @@ class Settings {
                 url:"https://app1495.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
                 type: "GET",
                 success: function(resp) {
-                    console.log(resp);
                     if (resp.result === "success") {
-                        console.log(resp);
                         window.location.replace(resp.apply_code_url);
                     }
                 }
@@ -172,7 +170,6 @@ class Settings {
         let outer = this;
         let username = this.$login_username.val();
         let password = this.$login_password.val();
-        console.log(username, password);
 
         $.ajax ({
             url: "https://app1495.acapp.acwing.com.cn/settings/login/",
@@ -182,7 +179,6 @@ class Settings {
                 password:password,
             },
             success: function(resp) {
-                console.log(resp);
                 if (resp.result === "success") {
                     location.reload();
                 } else {
@@ -203,7 +199,6 @@ class Settings {
                 success: function(resp){
                     if (resp.result === "success") {
                         // 刷新之后会回到登陆界面，因为是未授权状态
-                        console.log("logout success");
                         location.reload();
                     } else {
                         return resp.result;
@@ -218,7 +213,6 @@ class Settings {
         let username = this.$register_username.val();
         let password1 = this.$register_password1.val();
         let password2 = this.$register_password2.val();
-        console.log(username, password1, password2);
         if (password1 !== password2) {
             this.$register_error_message.html("密码与确认密码不一致");
             this.$register_password1.empty();
@@ -234,7 +228,6 @@ class Settings {
                 },
                 success: function(resp) {
                     if (resp.result === "success") {
-                        console.log("success register");
                         location.reload();
                     } else {
                         outer.$register_error_message.html(resp.result);
@@ -258,8 +251,6 @@ class Settings {
         let outer = this;
         this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp){
             // 通过该函数(callback)来接受的内容
-            console.log("called from acapp function");
-            console.log(resp);
             if (resp.result === "success"){
                 outer.username = resp.username;
                 outer.photo = resp.photo;
@@ -275,7 +266,6 @@ class Settings {
             url: "https://app1495.acapp.acwing.com.cn/settings/acwing/acapp/apply_code/",
             type: "GET",
             success: function(resp) {
-                console.log(resp);
                 if (resp.result === "success") {
                     outer.acapp_login(resp.appid,resp.redirect_uri, resp.state, resp.scope);
                 }
@@ -292,7 +282,6 @@ class Settings {
                 platform: outer.platform,
             },
             success: function(resp){
-                console.log(resp);
 
                 if (resp.result === "success"){
 
