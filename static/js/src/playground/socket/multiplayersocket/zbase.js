@@ -35,8 +35,10 @@ class MultiPlayerSocket {
                 outer.receive_create_player(uuid, data.username, data.photo);
             } else if (event === "move_to") {
                 outer.receive_move_to(uuid, data.tx, data.ty);
-            } else if (event === "shoot fireball") {
+            } else if (event === "shoot_fireball") {
                 outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
+            } else if (event === "attacked") {
+                outer.receive_attacked(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
             }
         };
     }
@@ -50,27 +52,39 @@ class MultiPlayerSocket {
             'photo': photo,
         }))
     }
-    send_move_to(uuid, tx, ty) {
+    send_move_to(uuid, tx, ty, ball_uuid) {
         let outer = this;
-        console.log(uuid);
         this.ws.send(JSON.stringify({
             'event': "move_to",
-            "uuid": uuid,
-            "tx": tx,
-            "ty": ty
+            'uuid': uuid,
+            'tx': tx,
+            'ty': ty,
+            'ball_uuid': ball_uuid,
         }))
     }
     send_shoot_fireball(uuid, tx, ty, ball_uuid) {
         let outer = this;
         this.ws.send(JSON.stringify({
-            'event': "shoot fireball",
+            'event': "shoot_fireball",
             "uuid": uuid,
             "tx": tx,
             "ty": ty,
             "ball_uuid": ball_uuid,
         }))
     }
-
+    send_attacked(uuid, attackee_uuid, x, y, angle, damage, ball_uuid) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            "event": "attacked",
+            'uuid': uuid,           // attacker的uuid
+            "attackee_uuid": attackee_uuid,
+            "x": x,
+            "y": y,
+            "angle": angle,
+            "damage": damage,
+            "ball_uuid": ball_uuid,
+        }))
+    }
     receive_create_player(uuid, username, photo) {
         let player = new Player(
             this.playground,
@@ -94,11 +108,18 @@ class MultiPlayerSocket {
         }
 
     }
+
     receive_shoot_fireball(uuid, tx, ty, ball_uuid) {
         // 接受了fireball之后放进去当前的fireballs里面
-        let player = get_player(uuid);
-        let fireball = player.shoot_firball(tx, ty);
+        let player = this.get_player(uuid);
+        let fireball = player.shoot_fireball(tx, ty);
         fireball.uuid = ball_uuid;
+    }
+
+    receive_attacked(uuid, attackee_uuid, x, y, angle, damage, ball_uuid) {
+        let attacker = this.get_player(uuid);
+        let attackee = this.get_player(attackee_uuid);
+        attackee.receive_attacked(attacker, x, y, angle, damage, ball_uuid);     // 传给副窗口告诉他删掉他自己的fireballs里面的当前的这个ball_uuid的fireball
     }
 }
 

@@ -58,8 +58,12 @@ class FireBall extends AcGameObject {
     attack(player){
         let angle = Math.atan2(player.y - this.y, player.x - this.x);
         // 被攻击的角度跟伤害
-
-        player.attacked(angle, this.damage);
+        if (this.player.character !== "enemy") {       // 如果说当前的这个窗口发出的这个火球判断是enemy发的就不用受伤)
+            player.attacked(angle, this.damage);
+            if (this.playground.mode === "multi mode") {
+                this.playground.mps.send_attacked(this.playground.players[0].uuid, player.uuid, player.x, player.y, angle, this.damage, this.uuid);
+            }
+        }
 
         this.destroy();
     }

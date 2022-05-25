@@ -68,7 +68,7 @@ class Player extends AcGameObject {
                 {
                     let fireball = outer.shoot_fireball(tx, ty);
                     if (outer.playground.mode === "multi mode") {
-                        outer.playground.mps.send_shoot_fireball(this.uuid, tx, ty, fireball.uuid);
+                        outer.playground.mps.send_shoot_fireball(outer.uuid, tx, ty, fireball.uuid);
                     }
                 }
                 outer.cur_skill = null;
@@ -84,13 +84,23 @@ class Player extends AcGameObject {
 
     };
 
+    destroy_fireball(attacker, uuid) {
+        for (let i = 0; i < attacker.fireballs.length; i ++ ) {
+            let fireball = attacker.fireballs[i];
+            if (fireball.uuid === uuid) {
+                fireball.destroy();
+                break;
+            }
+        }
+    }
 
     attacked(angle, damage) {
         this.radius -= damage;
         if (this.radius < this.eps) {
             this.destroy();
             return false;
-        }else {
+        }
+        else {
             this.damage_speed = damage * 20;
             this.damage_x = Math.cos(angle);
             this.damage_y = Math.sin(angle);
@@ -108,6 +118,14 @@ class Player extends AcGameObject {
             new Particle(this.playground, x, y, radius, speed, vx, vy, move_length);
         }
 
+    }
+
+    receive_attacked(attacker, x, y, angle, damage, ball_uuid) {
+        attacker.destroy_fireball(attacker, ball_uuid);
+        this.x = x;
+        this.y = y;
+
+        this.attacked(angle, damage);
     }
 
     shoot_fireball(tx, ty) {
@@ -156,7 +174,7 @@ class Player extends AcGameObject {
 
             let t = Math.floor(this.playground.players.length * Math.random());
             let target = this.playground.players[t];
-            this.shoot_fireball(target.x, target.y);
+           this.shoot_fireball(target.x, target.y);
         }
         // 收到伤害单位时间移动的距离就是伤害的速度
         if (this.damage_speed > this.eps) {

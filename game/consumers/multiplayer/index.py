@@ -80,13 +80,30 @@ class MultiPlayer(AsyncWebsocketConsumer):
             self.room_name,
             {
                 "type": "group_send",
-                "event": "shoot_ball",
+                "event": "shoot_fireball",
                 "uuid": data['uuid'],
                 "tx": data['tx'],
                 "ty": data['ty'],
                 "ball_uuid": data['ball_uuid'],
             }
         )
+
+    async def attacked(self, data):
+        await self.channel_layer.group_send(
+            self.room_name,
+            {
+                "type": "group_send",
+                "event": "attacked",
+                "uuid": data['uuid'],
+                "attackee_uuid": data['attackee_uuid'],
+                "x": data['x'],
+                "y": data['y'],
+                "angle": data['angle'],
+                "damage": data['damage'],
+                "ball_uuid": data['ball_uuid'],
+            }
+        )
+        print("attacked")
 
     async def group_send(self, data):
         # 发送给前端当前的玩家信息，并且是一个一个发
@@ -100,8 +117,11 @@ class MultiPlayer(AsyncWebsocketConsumer):
             await self.create_player(data)
         elif event == "move_to":
             await self.move_to(data)
-        elif event == "shoot fireball":
+        elif event == "shoot_fireball":
             await self.shoot_fireball(data)
+        elif event == "attacked":
+            await self.attacked(data)
+
 
 
 
