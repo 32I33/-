@@ -32,8 +32,11 @@ class Player extends AcGameObject {
         // 注意只有说是我自己的时候才会有这个技能冷却时间，因此在后面的所有的关于技能冷却内容都是要加上"me"的判断
         if (this.character === "me") {
             this.fireball_coldtime = 3;     // 单位s
+            this.blink_coldtime = 5;
+            this.blink_img = new Image();
+            this.blink_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_daccabdc53-blink.png";
             this.fireball_img = new Image();
-            this.fireball_img.src= "/static/image/playground/fireball_img.png";
+            this.fireball_img.src= "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
         }
 
         this.cur_skill = null;
@@ -89,21 +92,26 @@ class Player extends AcGameObject {
                         outer.playground.mps.send_shoot_fireball(outer.uuid, tx, ty, fireball.uuid);
                     }
                     if (outer.fireball_count <= 0) {
-                         outer.cur_skill = null;
+                        outer.cur_skill = null;
                     }
+                } else if (outer.cur_skill === "blink") {
+                    outer.blink(tx, ty);
                 }
             }
         });
         $(window).keydown(function(e) {                     // 这个是获取键盘输入按键的！
-            if (e.which === 81) {       // q键
-                if (outer.fireball_coldtime < outer.eps) {
-                    console.log("get_skill")
-                    outer.cur_skill = "fireball";
-                    outer.fireball_count ++;
-                    outer.fireball_coldtime = 3;
-                    return false;
+                if (e.which === 81) {       // q键
+                    if (outer.fireball_coldtime < outer.eps) {
+                        outer.cur_skill = "fireball";
+                        outer.fireball_count ++;
+                        outer.fireball_coldtime = 3;
+                        return false;
+                    }
                 }
-            }
+                else if (e.which === 70) {
+                    outer.cur_skill = "blink";
+                    outer.blink_coldtime = 5;
+                }
         });
 
     };
@@ -116,6 +124,14 @@ class Player extends AcGameObject {
                 break;
             }
         }
+    }
+
+    blink(tx, ty) {
+        let d = this.get_dist(x, y, tx, ty);
+        d = Math.min(d, 0.8);
+        let angle = Math.atan(ty - y, tx - x);
+        this.x += d * Math.cos(angle);
+        this.y += d * Math.sin(angle);
     }
 
     attacked(angle, damage) {
@@ -189,7 +205,7 @@ class Player extends AcGameObject {
 
     update(){
         this.update_move();
-        this.update_fireball_coldtime();
+        this.update_coldtime();
         this.render();
     }
 
@@ -231,14 +247,14 @@ class Player extends AcGameObject {
 
     }
 
-    update_fireball_coldtime() {
+    update_coldtime() {
         if (this.character !== "me")
             return false;
-        if (this.playground.state === "fighting" && this.fireball_coldtime > this.eps) {
-            console.log(this.fireball_coldtime);
-            this.fireball_coldtime -= this.timedelta / 1000;
-            this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
-        }
+        this.fireball_coldtime -= this.timedelta / 1000;
+        this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
+        this.blink_coldtime -= this.timedelta / 1000;
+        this.blink_coldtime = Math.min(this.blink_coldtime, 0);
+
     }
 
 
@@ -261,11 +277,11 @@ class Player extends AcGameObject {
             this.ctx.fill();
         }
         if (this.character === "me") {
-            this.render_fireball_coldtime();
+            this.render_coldtime();
         }
     }
-    render_fireball_coldtime() {
-        let x = 1.5, y = 0.8, r = 0.04;
+    render_coldtime() {
+        let x = 1.5, y = 0.9, r = 0.04;
         let scale = this.playground.scale;
         this.ctx.save();
         this.ctx.beginPath();
@@ -274,5 +290,30 @@ class Player extends AcGameObject {
         this.ctx.clip();
         this.ctx.drawImage(this.fireball_img, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
         this.ctx.restore();
+        if (this.fireball_coldtime > 0) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x * scale, y * scale);
+            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.fireball_coldtime / 3) - Math.PI / 2, true);
+            this.ctx.lineTo(x * scale, y * scale);
+            this.ctx.fillStyle = "rgba(0, 0, 255, 0.6)";
+            this.ctx.fill();
+        }
+
+        x = 1.6, y = 0.8
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+        this.ctx.stroke();
+        this.ctx.clip();
+        this.ctx.drawImage(this.blink_img, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.restore();
+        if (this.fireball_coldtime > 0) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x * scale, y * scale);
+            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.blink_coldtime / 5) - Math.PI / 2, true);
+            this.ctx.lineTo(x * scale, y * scale);
+            this.ctx.fillStyle = "rgba(0, 0, 255, 0.6)";
+            this.ctx.fill();
+        }
     }
 }

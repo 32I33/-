@@ -235,7 +235,6 @@ class Player extends AcGameObject {
         if (this.character !== "me")
             return false;
         if (this.playground.state === "fighting" && this.fireball_coldtime > this.eps) {
-            console.log(this.fireball_coldtime);
             this.fireball_coldtime -= this.timedelta / 1000;
             this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
         }
@@ -267,7 +266,6 @@ class Player extends AcGameObject {
     render_fireball_coldtime() {
         let x = 1.5, y = 0.9, r = 0.04;
         let scale = this.playground.scale;
-        this.ctx.save();
         this.ctx.beginPath();
         this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
         this.ctx.stroke();
@@ -275,6 +273,15 @@ class Player extends AcGameObject {
         this.ctx.drawImage(this.fireball_img, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
         this.ctx.restore();
 
-        if (
+        if (this.fireball_coldtime > 0) {
+            this.ctx.beginPath();
+            // 将画的起始点移至到(0, 0)
+            this.ctx.moveTo(x * scale, y * scale);
+            // 按照时钟的转动方向以及从12点开始转
+            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * this.fireball_coldetime / 3 - Math.PI / 2, true);
+            this.ctx.lineTo(x * scale, y * scale);
+            this.ctx.fillStyle = this.color;
+            this.ctx.fill();
+        }
     }
 }
