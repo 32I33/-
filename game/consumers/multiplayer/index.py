@@ -103,7 +103,6 @@ class MultiPlayer(AsyncWebsocketConsumer):
                 "ball_uuid": data['ball_uuid'],
             }
         )
-        print("attacked")
 
     async def group_send(self, data):
         # 发送给前端当前的玩家信息，并且是一个一个发
