@@ -313,7 +313,6 @@ class Player extends AcGameObject {
             {
                 outer.move_to(tx, ty);
                 if (outer.playground.mode === "multi mode"){
-                    console.log("multi move");
                     outer.playground.mps.send_move_to(outer.uuid, tx, ty);
                 }
 
@@ -331,7 +330,10 @@ class Player extends AcGameObject {
                         outer.cur_skill = null;
                     }
                 } else if (outer.cur_skill === "blink") {
+                    console.log("blink");
                     outer.blink(tx, ty);
+                    outer.cur_skill = null;
+                    console.log(outer.cur_skill);
                 }
             }
         });
@@ -344,9 +346,14 @@ class Player extends AcGameObject {
                         return false;
                     }
                 }
-                else if (e.which === 70) {
-                    outer.cur_skill = "blink";
-                    outer.blink_coldtime = 5;
+                if (e.which === 70) {
+                    if (outer.blink_coldtime < outer.eps) {
+
+                        outer.cur_skill = "blink";
+                        outer.blink_coldtime = 5;
+
+                        return false;
+                    }
                 }
         });
 
@@ -363,9 +370,9 @@ class Player extends AcGameObject {
     }
 
     blink(tx, ty) {
-        let d = this.get_dist(x, y, tx, ty);
+        let d = this.get_dist(this.x, this.y, tx, ty);
         d = Math.min(d, 0.8);
-        let angle = Math.atan(ty - y, tx - x);
+        let angle = Math.atan2(ty - this.y, tx - this.x);
         this.x += d * Math.cos(angle);
         this.y += d * Math.sin(angle);
     }
@@ -489,7 +496,7 @@ class Player extends AcGameObject {
         this.fireball_coldtime -= this.timedelta / 1000;
         this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
         this.blink_coldtime -= this.timedelta / 1000;
-        this.blink_coldtime = Math.min(this.blink_coldtime, 0);
+        this.blink_coldtime = Math.max(this.blink_coldtime, 0);
 
     }
 
@@ -517,37 +524,38 @@ class Player extends AcGameObject {
         }
     }
     render_coldtime() {
-        let x = 1.5, y = 0.9, r = 0.04;
+        let fireball_coldtime_x = 1.5, fireball_coldtime_y = 0.9;
+        let r = 0.04;
         let scale = this.playground.scale;
         this.ctx.save();
         this.ctx.beginPath();
-        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+        this.ctx.arc(fireball_coldtime_x * scale, fireball_coldtime_y * scale, r * scale, 0, Math.PI * 2, false);
         this.ctx.stroke();
         this.ctx.clip();
-        this.ctx.drawImage(this.fireball_img, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.drawImage(this.fireball_img, (fireball_coldtime_x - r) * scale, (fireball_coldtime_y - r) * scale, r * 2 * scale, r * 2 * scale);
         this.ctx.restore();
         if (this.fireball_coldtime > 0) {
             this.ctx.beginPath();
-            this.ctx.moveTo(x * scale, y * scale);
-            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.fireball_coldtime / 3) - Math.PI / 2, true);
-            this.ctx.lineTo(x * scale, y * scale);
+            this.ctx.moveTo(fireball_coldtime_x * scale, fireball_coldtime_y * scale);
+            this.ctx.arc(fireball_coldtime_x * scale, fireball_coldtime_y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.fireball_coldtime / 3) - Math.PI / 2, true);
+            this.ctx.lineTo(fireball_coldtime_x * scale, fireball_coldtime_y * scale);
             this.ctx.fillStyle = "rgba(0, 0, 255, 0.6)";
             this.ctx.fill();
         }
 
-        x = 1.6, y = 0.8
+        let blink_coldtime_x = 1.6, blink_coldtime_y = 0.8;
         this.ctx.save();
         this.ctx.beginPath();
-        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+        this.ctx.arc(blink_coldtime_x * scale, blink_coldtime_y * scale, r * scale, 0, Math.PI * 2, false);
         this.ctx.stroke();
         this.ctx.clip();
-        this.ctx.drawImage(this.blink_img, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.drawImage(this.blink_img, (blink_coldtime_x - r) * scale, (blink_coldtime_y - r) * scale, r * 2 * scale, r * 2 * scale);
         this.ctx.restore();
-        if (this.fireball_coldtime > 0) {
+        if (this.blink_coldtime > 0) {
             this.ctx.beginPath();
-            this.ctx.moveTo(x * scale, y * scale);
-            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.blink_coldtime / 5) - Math.PI / 2, true);
-            this.ctx.lineTo(x * scale, y * scale);
+            this.ctx.moveTo(blink_coldtime_x * scale, blink_coldtime_y * scale);
+            this.ctx.arc(blink_coldtime_x * scale, blink_coldtime_y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.blink_coldtime / 5) - Math.PI / 2, true);
+            this.ctx.lineTo(blink_coldtime_x * scale, blink_coldtime_y * scale);
             this.ctx.fillStyle = "rgba(0, 0, 255, 0.6)";
             this.ctx.fill();
         }
