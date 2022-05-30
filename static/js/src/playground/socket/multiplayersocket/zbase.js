@@ -39,6 +39,10 @@ class MultiPlayerSocket {
                 outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
             } else if (event === "attacked") {
                 outer.receive_attacked(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
+            } else if (event === "blink") {
+                outer.receive_blink(uuid, data.tx, data.ty);
+            } else if (event === "send_message" && outer.playground.root.settings.username !== data.username) {
+                outer.receive_message(data.username, data.text);
             }
         };
     }
@@ -85,12 +89,34 @@ class MultiPlayerSocket {
             "ball_uuid": ball_uuid,
         }))
     }
+    send_blink(uuid, tx, ty) {
+        let outer = this;
+        this.ws.send(JSON.stringify(
+            {
+                "event": "blink",
+                "uuid": uuid,
+                "tx": tx,
+                "ty": ty,
+            }
+        ));
+    }
+
+    send_message(username, text) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            "event": "send_message",
+            "username": username,
+            "text": text,
+        }))
+    }
+
     receive_create_player(uuid, username, photo) {
         let player = new Player(
             this.playground,
             this.playground.width / 2 / this.playground.scale,
             0.5,
             0.05,
+
             "white",
             0.15,
             "enemy",
@@ -121,6 +147,16 @@ class MultiPlayerSocket {
         let attackee = this.get_player(attackee_uuid);
         attackee.receive_attacked(attacker, x, y, angle, damage, ball_uuid);     // 传给副窗口告诉他删掉他自己的fireballs里面的当前的这个ball_uuid的fireball
     }
-}
 
+    receive_blink(uuid, tx, ty) {
+        let player = this.get_player(uuid);
+        player.blink(tx, ty)
+    }
+
+    receive_message(username, text) {
+        console.log("mess")
+        this.playground.chat_field.show_history();
+        this.playground.chat_field.add_message(username, text);
+    }
+}
 

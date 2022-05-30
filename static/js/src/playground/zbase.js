@@ -3,7 +3,6 @@ class AcGamePlayground {
         this.root = root;
         this.$playground = $('<div class="ac-game-playground"></div>');
 
-
         this.root.$ac_game.append(this.$playground);
         this.width = this.$playground.width();
         this.height = this.$playground.height();
@@ -63,6 +62,7 @@ class AcGamePlayground {
         else if (mode === "multi mode"){
             // 为什么在这里加入我们的玩家信息？由于我们里面的Socket只是一个链接，他可以帮助很多事件创立链接，不代表玩家的信息，因此需要再playground里面加入我们的玩家的信息，这个看具体业务具体逻辑
             // 在这里用mps来代表socket好处是其他的函数move_to, shoot_fireball, attacked都可以直接从传进去的playground拿到
+            this.chat_field = new ChatField(this);
             this.mps = new MultiPlayerSocket(this);
             this.mps.uuid = this.players[0].uuid;                // 玩家0一直是我们自己，只有说创建了连接之后才会把其他的玩家加进来
             this.mps.ws.onopen = function() {

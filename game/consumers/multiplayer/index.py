@@ -104,6 +104,29 @@ class MultiPlayer(AsyncWebsocketConsumer):
             }
         )
 
+    async def blink(self, data):
+        await self.channel_layer.group_send(
+            self.room_name,
+            {
+                "type": "group_send",
+                "event": "blink",
+                "uuid": data['uuid'],
+                "tx": data['tx'],
+                "ty": data['ty'],
+            }
+        )
+
+    async def send_message(self, data):
+        await self.channel_layer.group_send(
+            self.room_name,
+            {
+                "type": "group_send",
+                "event": "send_message",
+                "username": data['username'],
+                "text": data['text'],
+            }
+        )
+
     async def group_send(self, data):
         # 发送给前端当前的玩家信息，并且是一个一个发
         await self.send(text_data=json.dumps(data))
@@ -120,6 +143,10 @@ class MultiPlayer(AsyncWebsocketConsumer):
             await self.shoot_fireball(data)
         elif event == "attacked":
             await self.attacked(data)
+        elif event == "blink":
+            await self.blink(data);
+        elif event == "send_message":
+            await self.send_message(data);
 
 
 

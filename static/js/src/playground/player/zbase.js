@@ -42,6 +42,7 @@ class Player extends AcGameObject {
         this.cur_skill = null;
     }
 
+
     start(){
         let count = ++ this.playground.player_count;
         if (count >= 3) {
@@ -69,6 +70,10 @@ class Player extends AcGameObject {
             return false;});
 
         this.playground.game_map.$canvas.mousedown(function(e){
+            if (outer.playground.player_count < 3) {
+                return false;
+
+            }
             const rect = outer.ctx.canvas.getBoundingClientRect(); // 从canvas里面获取这个画布的矩形框框
             let ee = e.which;
             let tx =(e.clientX - rect.left) / outer.playground.scale, ty = (e.clientY - rect.top) / outer.playground.scale; // 相对于画布上的坐标
@@ -94,31 +99,39 @@ class Player extends AcGameObject {
                         outer.cur_skill = null;
                     }
                 } else if (outer.cur_skill === "blink") {
-                    console.log("blink");
                     outer.blink(tx, ty);
+                    outer.cur_skill = "blink";
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_blink(outer.uuid, tx, ty);
+                    }
                     outer.cur_skill = null;
-                    console.log(outer.cur_skill);
                 }
             }
         });
         $(window).keydown(function(e) {                     // 这个是获取键盘输入按键的！
-                if (e.which === 81) {       // q键
-                    if (outer.fireball_coldtime < outer.eps) {
-                        outer.cur_skill = "fireball";
-                        outer.fireball_count ++;
-                        outer.fireball_coldtime = 3;
-                        return false;
-                    }
+            if (e.which === 81) {       // q键
+                if (outer.fireball_coldtime < outer.eps && outer.playground.state === "fighting") {
+                    outer.cur_skill = "fireball";
+                    outer.fireball_count ++;
+                    outer.fireball_coldtime = 3;
+                    return false;
                 }
-                if (e.which === 70) {
-                    if (outer.blink_coldtime < outer.eps) {
+            }
+            if (e.which === 70) {
+                if (outer.blink_coldtime < outer.eps && outer.playground.state === "fighting") {
+                    outer.cur_skill = "blink";
+                    outer.blink_coldtime = 5;
 
-                        outer.cur_skill = "blink";
-                        outer.blink_coldtime = 5;
-
-                        return false;
-                    }
+                    return false;
                 }
+            }
+            if (e.which === 13) {
+                outer.playground.chat_field.show_input();
+            }
+            if (e.which === 27) {
+                outer.playground.chat_field.hide_input();
+            }
+
         });
 
     };
@@ -257,10 +270,12 @@ class Player extends AcGameObject {
     update_coldtime() {
         if (this.character !== "me")
             return false;
-        this.fireball_coldtime -= this.timedelta / 1000;
-        this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
-        this.blink_coldtime -= this.timedelta / 1000;
-        this.blink_coldtime = Math.max(this.blink_coldtime, 0);
+        if (this.playground.state === "fighting") {
+            this.fireball_coldtime -= this.timedelta / 1000;
+            this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
+            this.blink_coldtime -= this.timedelta / 1000;
+            this.blink_coldtime = Math.max(this.blink_coldtime, 0);
+        }
 
     }
 

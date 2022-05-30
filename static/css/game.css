@@ -159,3 +159,40 @@
     left: 50%;
     transform: translate(-50%, -50%)
 }
+
+.ac-game-playground-chat-field-history{
+    position: absolute;
+    top: 66%;
+    left: 22%;
+
+    transform: translate(-50%, -50%);
+
+    width: 20%;
+    height: 32%;
+
+    color: white;
+    font-size: 2vh;
+
+    padding: 5px;
+    overflow: auto;
+}
+/* scrollbar一开始是没有宽度的 */
+.ac-game-playground-chat-field-history::-webkit-scrollbar {
+    width: 0;
+}
+
+.ac-game-playground-chat-field-input {
+    position: absolute;
+    top: 86%;
+    left: 20%;
+    transform: translate(-50%, -50%);
+
+    width: 20%;
+    height: 3vh;
+
+    color: white;
+    font-size: 2vh;
+
+    background-color: rgba(222,225,230, 0.2);
+
+}

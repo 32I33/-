@@ -123,6 +123,75 @@ let AC_GAME_ANIMATION = function(timestamp) {       // 参数是该timestamp时�
 
 
 requestAnimationFrame(AC_GAME_ANIMATION);        // 1s更新60次
+class ChatField {
+    constructor(playground) {
+        this.playground= playground;
+        this.$input = $(`
+            <input type="text" class="ac-game-playground-chat-field-input"></input>
+        `);
+        this.$history = $(`<div class="ac-game-playground-chat-field-history">历史记录</div>`);
+        this.$input.hide();
+        this.$history.hide();
+        this.playground.$playground.append(this.$input);
+        this.playground.$playground.append(this.$history);
+
+        this.func_id = null;
+
+        this.start();
+    }
+    start() {
+        this.add_listening_events();
+    }
+
+    show_input() {
+        this.$input.show();
+        this.$input.focus();
+        this.show_history();
+    }
+
+    hide_input() {
+        this.$input.hide();
+        this.playground.$playground.focus();
+    }
+
+    add_listening_events() {
+        let outer = this;
+        this.$input.keydown(function(e){
+            if (e.which === 13) {
+                let username = outer.playground.root.settings.username;
+                let text = outer.$input.val();
+                if (text) {
+                    outer.$input.val("");
+                    outer.playground.mps.send_message(username, text);
+                    outer.add_message(username, text);
+                }
+            }
+            if (e.which === 27) {
+                outer.hide_input();
+                return false;
+            }
+        })
+    }
+
+    add_message(username, text) {
+        this.show_history();
+        let message = `[${username}]${text}`;
+        this.$history.append($(`<div>${message}</div>`));
+        // 滚条，才能不断产生新的内容
+        this.$history.scrollTop(this.$history[0].scrollHeight);
+    }
+
+    show_history() {
+        let outer = this;
+        this.$history.fadeIn();
+        if (this.func_id) clearTimeout(this.func_id);
+        // func_id表示的是当前的某一个function的id，settimeoute会传回来一个id
+        this.func_id = setTimeout(function() {
+            outer.$history.fadeOut();
+            outer.func_id = null;
+        }, 3000);
+    }
+}
 class GameMap extends AcGameObject {
     constructor(playground) {
         super();                // 调用基类的函数
@@ -278,6 +347,7 @@ class Player extends AcGameObject {
         this.cur_skill = null;
     }
 
+
     start(){
         let count = ++ this.playground.player_count;
         if (count >= 3) {
@@ -305,6 +375,10 @@ class Player extends AcGameObject {
             return false;});
 
         this.playground.game_map.$canvas.mousedown(function(e){
+            if (outer.playground.player_count < 3) {
+                return false;
+
+            }
             const rect = outer.ctx.canvas.getBoundingClientRect(); // 从canvas里面获取这个画布的矩形框框
             let ee = e.which;
             let tx =(e.clientX - rect.left) / outer.playground.scale, ty = (e.clientY - rect.top) / outer.playground.scale; // 相对于画布上的坐标
@@ -330,31 +404,39 @@ class Player extends AcGameObject {
                         outer.cur_skill = null;
                     }
                 } else if (outer.cur_skill === "blink") {
-                    console.log("blink");
                     outer.blink(tx, ty);
+                    outer.cur_skill = "blink";
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_blink(outer.uuid, tx, ty);
+                    }
                     outer.cur_skill = null;
-                    console.log(outer.cur_skill);
                 }
             }
         });
         $(window).keydown(function(e) {                     // 这个是获取键盘输入按键的！
-                if (e.which === 81) {       // q键
-                    if (outer.fireball_coldtime < outer.eps) {
-                        outer.cur_skill = "fireball";
-                        outer.fireball_count ++;
-                        outer.fireball_coldtime = 3;
-                        return false;
-                    }
+            if (e.which === 81) {       // q键
+                if (outer.fireball_coldtime < outer.eps && outer.playground.state === "fighting") {
+                    outer.cur_skill = "fireball";
+                    outer.fireball_count ++;
+                    outer.fireball_coldtime = 3;
+                    return false;
                 }
-                if (e.which === 70) {
-                    if (outer.blink_coldtime < outer.eps) {
+            }
+            if (e.which === 70) {
+                if (outer.blink_coldtime < outer.eps && outer.playground.state === "fighting") {
+                    outer.cur_skill = "blink";
+                    outer.blink_coldtime = 5;
 
-                        outer.cur_skill = "blink";
-                        outer.blink_coldtime = 5;
-
-                        return false;
-                    }
+                    return false;
                 }
+            }
+            if (e.which === 13) {
+                outer.playground.chat_field.show_input();
+            }
+            if (e.which === 27) {
+                outer.playground.chat_field.hide_input();
+            }
+
         });
 
     };
@@ -493,10 +575,12 @@ class Player extends AcGameObject {
     update_coldtime() {
         if (this.character !== "me")
             return false;
-        this.fireball_coldtime -= this.timedelta / 1000;
-        this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
-        this.blink_coldtime -= this.timedelta / 1000;
-        this.blink_coldtime = Math.max(this.blink_coldtime, 0);
+        if (this.playground.state === "fighting") {
+            this.fireball_coldtime -= this.timedelta / 1000;
+            this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
+            this.blink_coldtime -= this.timedelta / 1000;
+            this.blink_coldtime = Math.max(this.blink_coldtime, 0);
+        }
 
     }
 
@@ -697,6 +781,10 @@ class MultiPlayerSocket {
                 outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
             } else if (event === "attacked") {
                 outer.receive_attacked(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
+            } else if (event === "blink") {
+                outer.receive_blink(uuid, data.tx, data.ty);
+            } else if (event === "send_message" && outer.playground.root.settings.username !== data.username) {
+                outer.receive_message(data.username, data.text);
             }
         };
     }
@@ -743,12 +831,34 @@ class MultiPlayerSocket {
             "ball_uuid": ball_uuid,
         }))
     }
+    send_blink(uuid, tx, ty) {
+        let outer = this;
+        this.ws.send(JSON.stringify(
+            {
+                "event": "blink",
+                "uuid": uuid,
+                "tx": tx,
+                "ty": ty,
+            }
+        ));
+    }
+
+    send_message(username, text) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            "event": "send_message",
+            "username": username,
+            "text": text,
+        }))
+    }
+
     receive_create_player(uuid, username, photo) {
         let player = new Player(
             this.playground,
             this.playground.width / 2 / this.playground.scale,
             0.5,
             0.05,
+
             "white",
             0.15,
             "enemy",
@@ -779,14 +889,23 @@ class MultiPlayerSocket {
         let attackee = this.get_player(attackee_uuid);
         attackee.receive_attacked(attacker, x, y, angle, damage, ball_uuid);     // 传给副窗口告诉他删掉他自己的fireballs里面的当前的这个ball_uuid的fireball
     }
-}
 
+    receive_blink(uuid, tx, ty) {
+        let player = this.get_player(uuid);
+        player.blink(tx, ty)
+    }
+
+    receive_message(username, text) {
+        console.log("mess")
+        this.playground.chat_field.show_history();
+        this.playground.chat_field.add_message(username, text);
+    }
+}
 
 class AcGamePlayground {
     constructor(root) {
         this.root = root;
         this.$playground = $('<div class="ac-game-playground"></div>');
-
 
         this.root.$ac_game.append(this.$playground);
         this.width = this.$playground.width();
@@ -847,6 +966,7 @@ class AcGamePlayground {
         else if (mode === "multi mode"){
             // 为什么在这里加入我们的玩家信息？由于我们里面的Socket只是一个链接，他可以帮助很多事件创立链接，不代表玩家的信息，因此需要再playground里面加入我们的玩家的信息，这个看具体业务具体逻辑
             // 在这里用mps来代表socket好处是其他的函数move_to, shoot_fireball, attacked都可以直接从传进去的playground拿到
+            this.chat_field = new ChatField(this);
             this.mps = new MultiPlayerSocket(this);
             this.mps.uuid = this.players[0].uuid;                // 玩家0一直是我们自己，只有说创建了连接之后才会把其他的玩家加进来
             this.mps.ws.onopen = function() {
