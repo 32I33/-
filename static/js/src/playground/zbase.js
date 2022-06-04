@@ -48,6 +48,7 @@ class AcGamePlayground {
         this.mode = mode;
 
         this.notice_board = new NoticeBoard(this);
+        this.score_board = new ScoreBoard(this);
         this.state = "waiting";
         this.player_count = 0;
 
@@ -74,4 +75,5 @@ class AcGamePlayground {
         this.$playground.hide();
     }
 }
+
 

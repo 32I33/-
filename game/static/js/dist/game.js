@@ -123,6 +123,76 @@ let AC_GAME_ANIMATION = function(timestamp) {       // 参数是该timestamp时�
 
 
 requestAnimationFrame(AC_GAME_ANIMATION);        // 1s更新60次
+class ChatField {
+    constructor(playground) {
+        this.playground= playground;
+        this.$input = $(`
+            <input type="text" class="ac-game-playground-chat-field-input"></input>
+        `);
+        this.$history = $(`<div class="ac-game-playground-chat-field-history">历史记录</div>`);
+        this.$input.hide();
+        this.$history.hide();
+        this.playground.$playground.append(this.$input);
+        this.playground.$playground.append(this.$history);
+
+        this.func_id = null;
+
+        this.start();
+    }
+    start() {
+        this.add_listening_events();
+    }
+
+    show_input() {
+        this.$input.show();
+        this.$input.focus();
+        this.show_history();
+    }
+
+    hide_input() {
+        this.$input.hide();
+        this.playground.$playground.focus();
+    }
+
+    add_listening_events() {
+        let outer = this;
+        this.$input.keydown(function(e){
+            if (e.which === 13) {
+                let username = outer.playground.root.settings.username;
+                let text = outer.$input.val();
+                if (text) {
+                    outer.$input.val("");
+                    outer.playground.mps.send_message(username, text);
+                    outer.add_message(username, text);
+                }
+            }
+            if (e.which === 27) {
+                outer.hide_input();
+                return false;
+            }
+        })
+    }
+
+    add_message(username, text) {
+        this.show_history();
+        let message = `[${username}]${text}`;
+        this.$history.append($(`<div>${message}</div>`));
+        // 滚条，才能不断产生新的内容
+        this.$history.scrollTop(this.$history[0].scrollHeight);
+    }
+
+    show_history() {
+        let outer = this;
+        this.$history.fadeIn();
+        if (this.func_id) clearTimeout(this.func_id);
+        // func_id表示的是当前的某一个function的id，settimeoute会传回来一个id
+        this.func_id = setTimeout(function() {
+            outer.$history.fadeOut();
+            outer.func_id = null;
+        }, 3000);
+    }
+}
+
 class GameMap extends AcGameObject {
     constructor(playground) {
         super();                // 调用基类的函数
@@ -268,12 +338,16 @@ class Player extends AcGameObject {
         // 注意只有说是我自己的时候才会有这个技能冷却时间，因此在后面的所有的关于技能冷却内容都是要加上"me"的判断
         if (this.character === "me") {
             this.fireball_coldtime = 3;     // 单位s
+            this.blink_coldtime = 5;
+            this.blink_img = new Image();
+            this.blink_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_daccabdc53-blink.png";
             this.fireball_img = new Image();
-            this.fireball_img.src= "/static/image/playground/fireball_img.png";
+            this.fireball_img.src= "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
         }
 
         this.cur_skill = null;
     }
+
 
     start(){
         let count = ++ this.playground.player_count;
@@ -302,6 +376,10 @@ class Player extends AcGameObject {
             return false;});
 
         this.playground.game_map.$canvas.mousedown(function(e){
+            if (outer.playground.player_count < 3) {
+                return false;
+
+            }
             const rect = outer.ctx.canvas.getBoundingClientRect(); // 从canvas里面获取这个画布的矩形框框
             let ee = e.which;
             let tx =(e.clientX - rect.left) / outer.playground.scale, ty = (e.clientY - rect.top) / outer.playground.scale; // 相对于画布上的坐标
@@ -310,7 +388,6 @@ class Player extends AcGameObject {
             {
                 outer.move_to(tx, ty);
                 if (outer.playground.mode === "multi mode"){
-                    console.log("multi move");
                     outer.playground.mps.send_move_to(outer.uuid, tx, ty);
                 }
 
@@ -325,21 +402,42 @@ class Player extends AcGameObject {
                         outer.playground.mps.send_shoot_fireball(outer.uuid, tx, ty, fireball.uuid);
                     }
                     if (outer.fireball_count <= 0) {
-                         outer.cur_skill = null;
+                        outer.cur_skill = null;
                     }
+                } else if (outer.cur_skill === "blink") {
+                    outer.blink(tx, ty);
+                    outer.cur_skill = "blink";
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_blink(outer.uuid, tx, ty);
+                    }
+                    outer.cur_skill = null;
                 }
             }
         });
         $(window).keydown(function(e) {                     // 这个是获取键盘输入按键的！
             if (e.which === 81) {       // q键
-                if (outer.fireball_coldtime < outer.eps) {
-                    console.log("get_skill")
+                if (outer.fireball_coldtime < outer.eps && outer.playground.state === "fighting") {
                     outer.cur_skill = "fireball";
                     outer.fireball_count ++;
                     outer.fireball_coldtime = 3;
                     return false;
                 }
             }
+            if (e.which === 70) {
+                if (outer.blink_coldtime < outer.eps && outer.playground.state === "fighting") {
+                    outer.cur_skill = "blink";
+                    outer.blink_coldtime = 5;
+
+                    return false;
+                }
+            }
+            if (e.which === 13) {
+                outer.playground.chat_field.show_input();
+            }
+            if (e.which === 27) {
+                outer.playground.chat_field.hide_input();
+            }
+
         });
 
     };
@@ -352,6 +450,14 @@ class Player extends AcGameObject {
                 break;
             }
         }
+    }
+
+    blink(tx, ty) {
+        let d = this.get_dist(this.x, this.y, tx, ty);
+        d = Math.min(d, 0.8);
+        let angle = Math.atan2(ty - this.y, tx - this.x);
+        this.x += d * Math.cos(angle);
+        this.y += d * Math.sin(angle);
     }
 
     attacked(angle, damage) {
@@ -425,7 +531,7 @@ class Player extends AcGameObject {
 
     update(){
         this.update_move();
-        this.update_fireball_coldtime();
+        this.update_coldtime();
         this.render();
     }
 
@@ -467,13 +573,16 @@ class Player extends AcGameObject {
 
     }
 
-    update_fireball_coldtime() {
+    update_coldtime() {
         if (this.character !== "me")
             return false;
-        if (this.playground.state === "fighting" && this.fireball_coldtime > this.eps) {
+        if (this.playground.state === "fighting") {
             this.fireball_coldtime -= this.timedelta / 1000;
             this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
+            this.blink_coldtime -= this.timedelta / 1000;
+            this.blink_coldtime = Math.max(this.blink_coldtime, 0);
         }
+
     }
 
 
@@ -496,28 +605,105 @@ class Player extends AcGameObject {
             this.ctx.fill();
         }
         if (this.character === "me") {
-            this.render_fireball_coldtime();
+            this.render_coldtime();
         }
     }
-    render_fireball_coldtime() {
-        let x = 1.5, y = 0.9, r = 0.04;
+    render_coldtime() {
+        let fireball_coldtime_x = 1.5, fireball_coldtime_y = 0.9;
+        let r = 0.04;
         let scale = this.playground.scale;
+        this.ctx.save();
         this.ctx.beginPath();
-        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+        this.ctx.arc(fireball_coldtime_x * scale, fireball_coldtime_y * scale, r * scale, 0, Math.PI * 2, false);
         this.ctx.stroke();
         this.ctx.clip();
-        this.ctx.drawImage(this.fireball_img, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.drawImage(this.fireball_img, (fireball_coldtime_x - r) * scale, (fireball_coldtime_y - r) * scale, r * 2 * scale, r * 2 * scale);
         this.ctx.restore();
-
         if (this.fireball_coldtime > 0) {
             this.ctx.beginPath();
-            // 将画的起始点移至到(0, 0)
-            this.ctx.moveTo(x * scale, y * scale);
-            // 按照时钟的转动方向以及从12点开始转
-            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * this.fireball_coldetime / 3 - Math.PI / 2, true);
-            this.ctx.lineTo(x * scale, y * scale);
-            this.ctx.fillStyle = this.color;
+            this.ctx.moveTo(fireball_coldtime_x * scale, fireball_coldtime_y * scale);
+            this.ctx.arc(fireball_coldtime_x * scale, fireball_coldtime_y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.fireball_coldtime / 3) - Math.PI / 2, true);
+            this.ctx.lineTo(fireball_coldtime_x * scale, fireball_coldtime_y * scale);
+            this.ctx.fillStyle = "rgba(0, 0, 255, 0.6)";
             this.ctx.fill();
+        }
+
+        let blink_coldtime_x = 1.6, blink_coldtime_y = 0.8;
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(blink_coldtime_x * scale, blink_coldtime_y * scale, r * scale, 0, Math.PI * 2, false);
+        this.ctx.stroke();
+        this.ctx.clip();
+        this.ctx.drawImage(this.blink_img, (blink_coldtime_x - r) * scale, (blink_coldtime_y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.restore();
+        if (this.blink_coldtime > 0) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(blink_coldtime_x * scale, blink_coldtime_y * scale);
+            this.ctx.arc(blink_coldtime_x * scale, blink_coldtime_y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.blink_coldtime / 5) - Math.PI / 2, true);
+            this.ctx.lineTo(blink_coldtime_x * scale, blink_coldtime_y * scale);
+            this.ctx.fillStyle = "rgba(0, 0, 255, 0.6)";
+            this.ctx.fill();
+        }
+    }
+}
+
+class ScoreBoard extends AcGameObject {
+    constructor(playground) {
+        super();
+        this.playground = playground;
+        this.ctx = this.playground.game_map.ctx;
+
+        this.state = null;
+
+        this.win_img = new Image();
+        this.win_img.src = "https://cdn.acwing.com/media/article/image/2021/12/17/1_8f58341a5e-win.png";
+        this.lose_img = new Image();
+        this.lose_img.src = "https://cdn.acwing.com/media/article/image/2021/12/17/1_9254b5f95e-lose.png";
+
+        this.start();
+    }
+    start() {
+    }
+
+    add_listening_events() {
+        let outer = this;
+
+        let $canvas = this.playground.game_map.$canvas;
+        $canvas.on('click', function() {
+            outer.playground.$playground.hide();
+            outer.playground.root.menu.$menu.show();
+        })
+    }
+
+    win() {
+        this.state = "win";
+
+        let outer = this;
+
+        setTimeout(function() {
+            outer.add_listening_events();
+        }, 1000);
+    }
+
+    lose() {
+        this.state = "lose";
+        let outer = this;
+
+        setTimeout(function() {
+            outer.add_listening_events();
+        }, 1000);
+    }
+
+    update() {
+        this.render();
+    }
+
+    render() {
+        let len = this.playground.height / 2;
+        if (this.state === "win") {
+            this.ctx.drawImage(this.win_img, this.playground.width / 2 - len / 2, this.playground.height / 2 - len / 2, len, len);
+        } else if (this.state === "lose") {
+            this.ctx.drawImage(this.lose_img, this.playground.width / 2 - len / 2, this.playground.height / 2 - len/ 2, len, len);
         }
     }
 }
@@ -657,6 +843,10 @@ class MultiPlayerSocket {
                 outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
             } else if (event === "attacked") {
                 outer.receive_attacked(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
+            } else if (event === "blink") {
+                outer.receive_blink(uuid, data.tx, data.ty);
+            } else if (event === "send_message" && outer.playground.root.settings.username !== data.username) {
+                outer.receive_message(data.username, data.text);
             }
         };
     }
@@ -703,12 +893,34 @@ class MultiPlayerSocket {
             "ball_uuid": ball_uuid,
         }))
     }
+    send_blink(uuid, tx, ty) {
+        let outer = this;
+        this.ws.send(JSON.stringify(
+            {
+                "event": "blink",
+                "uuid": uuid,
+                "tx": tx,
+                "ty": ty,
+            }
+        ));
+    }
+
+    send_message(username, text) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            "event": "send_message",
+            "username": username,
+            "text": text,
+        }))
+    }
+
     receive_create_player(uuid, username, photo) {
         let player = new Player(
             this.playground,
             this.playground.width / 2 / this.playground.scale,
             0.5,
             0.05,
+
             "white",
             0.15,
             "enemy",
@@ -739,6 +951,17 @@ class MultiPlayerSocket {
         let attackee = this.get_player(attackee_uuid);
         attackee.receive_attacked(attacker, x, y, angle, damage, ball_uuid);     // 传给副窗口告诉他删掉他自己的fireballs里面的当前的这个ball_uuid的fireball
     }
+
+    receive_blink(uuid, tx, ty) {
+        let player = this.get_player(uuid);
+        player.blink(tx, ty)
+    }
+
+    receive_message(username, text) {
+        console.log("mess")
+        this.playground.chat_field.show_history();
+        this.playground.chat_field.add_message(username, text);
+    }
 }
 
 
@@ -746,7 +969,6 @@ class AcGamePlayground {
     constructor(root) {
         this.root = root;
         this.$playground = $('<div class="ac-game-playground"></div>');
-
 
         this.root.$ac_game.append(this.$playground);
         this.width = this.$playground.width();
@@ -793,6 +1015,7 @@ class AcGamePlayground {
         this.mode = mode;
 
         this.notice_board = new NoticeBoard(this);
+        this.score_board = new ScoreBoard(this);
         this.state = "waiting";
         this.player_count = 0;
 
@@ -807,6 +1030,7 @@ class AcGamePlayground {
         else if (mode === "multi mode"){
             // 为什么在这里加入我们的玩家信息？由于我们里面的Socket只是一个链接，他可以帮助很多事件创立链接，不代表玩家的信息，因此需要再playground里面加入我们的玩家的信息，这个看具体业务具体逻辑
             // 在这里用mps来代表socket好处是其他的函数move_to, shoot_fireball, attacked都可以直接从传进去的playground拿到
+            this.chat_field = new ChatField(this);
             this.mps = new MultiPlayerSocket(this);
             this.mps.uuid = this.players[0].uuid;                // 玩家0一直是我们自己，只有说创建了连接之后才会把其他的玩家加进来
             this.mps.ws.onopen = function() {
@@ -818,6 +1042,7 @@ class AcGamePlayground {
         this.$playground.hide();
     }
 }
+
 
 class Settings {
     constructor(root){

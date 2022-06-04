@@ -192,6 +192,7 @@ class ChatField {
         }, 3000);
     }
 }
+
 class GameMap extends AcGameObject {
     constructor(playground) {
         super();                // 调用基类的函数
@@ -367,6 +368,8 @@ class Player extends AcGameObject {
     }
 
     add_listening_events(character) {
+        if (this.character !== "me")
+            return false;
         let outer = this;
 
         this.playground.game_map.$canvas.on("contextmenu", function() {  // 暂时不知道这个是做什么的
@@ -375,6 +378,7 @@ class Player extends AcGameObject {
         this.playground.game_map.$canvas.mousedown(function(e){
             if (outer.playground.player_count < 3) {
                 return false;
+
             }
             const rect = outer.ctx.canvas.getBoundingClientRect(); // 从canvas里面获取这个画布的矩形框框
             let ee = e.which;
@@ -410,9 +414,8 @@ class Player extends AcGameObject {
                 }
             }
         });
-       this.playground.game_map.$canvas.keydown(function(e) {                     // 这个是获取键盘输入按键的！
+        $(window).keydown(function(e) {                     // 这个是获取键盘输入按键的！
             if (e.which === 81) {       // q键
-                console.log("q down");
                 if (outer.fireball_coldtime < outer.eps && outer.playground.state === "fighting") {
                     outer.cur_skill = "fireball";
                     outer.fireball_count ++;
@@ -640,6 +643,67 @@ class Player extends AcGameObject {
             this.ctx.lineTo(blink_coldtime_x * scale, blink_coldtime_y * scale);
             this.ctx.fillStyle = "rgba(0, 0, 255, 0.6)";
             this.ctx.fill();
+        }
+    }
+}
+
+class ScoreBoard extends AcGameObject {
+    constructor(playground) {
+        super();
+        this.playground = playground;
+        this.ctx = this.playground.game_map.ctx;
+
+        this.state = null;
+
+        this.win_img = new Image();
+        this.win_img.src = "https://cdn.acwing.com/media/article/image/2021/12/17/1_8f58341a5e-win.png";
+        this.lose_img = new Image();
+        this.lose_img.src = "https://cdn.acwing.com/media/article/image/2021/12/17/1_9254b5f95e-lose.png";
+
+        this.start();
+    }
+    start() {
+    }
+
+    add_listening_events() {
+        let outer = this;
+
+        let $canvas = this.playground.game_map.$canvas;
+        $canvas.on('click', function() {
+            outer.playground.$playground.hide();
+            outer.playground.root.menu.$menu.show();
+        })
+    }
+
+    win() {
+        this.state = "win";
+
+        let outer = this;
+
+        setTimeout(function() {
+            outer.add_listening_events();
+        }, 1000);
+    }
+
+    lose() {
+        this.state = "lose";
+        let outer = this;
+
+        setTimeout(function() {
+            outer.add_listening_events();
+        }, 1000);
+    }
+
+    update() {
+        this.render();
+    }
+
+    render() {
+        let len = this.playground.height / 2;
+        if (this.state === "win") {
+            this.ctx.drawImage(this.win_img, this.playground.width / 2 - len / 2, this.playground.height / 2 - len / 2, len, len);
+        } else if (this.state === "lose") {
+            this.ctx.drawImage(this.lose_img, this.playground.width / 2 - len / 2, this.playground.height / 2 - len/ 2, len, len);
         }
     }
 }
@@ -900,6 +964,7 @@ class MultiPlayerSocket {
     }
 }
 
+
 class AcGamePlayground {
     constructor(root) {
         this.root = root;
@@ -950,6 +1015,7 @@ class AcGamePlayground {
         this.mode = mode;
 
         this.notice_board = new NoticeBoard(this);
+        this.score_board = new ScoreBoard(this);
         this.state = "waiting";
         this.player_count = 0;
 
@@ -976,6 +1042,7 @@ class AcGamePlayground {
         this.$playground.hide();
     }
 }
+
 
 class Settings {
     constructor(root){
