@@ -79,6 +79,41 @@ class MultiPlayer(AsyncWebsocketConsumer):
         )
 
     async def attacked(self, data):
+        # 后端判断是否有死亡，因此用了一个hp表示
+        if not self.room_name:
+            return
+
+        players = cache.get(self.room_name)
+
+        if not players:
+            return
+
+        for player in players:
+            if player['uuid'] == data['attackee_uuid']:
+                player['hp'] -= 25
+
+        remain_cnt = 0
+
+        for player in players:
+            if player['hp'] > 0:
+                remain_cnt += 1
+
+        if remain_cnt > 1:
+            if self.room_name:
+                cache.set(self.room_name, players, 3600)        # 重新把他set进去，因为重新拿了出来，重新设立一遍
+        else:
+            def db_update_player_score(username, score):
+                player = Player.objects.get(user__username)
+                player.score += score
+                player.save()
+            for player in players:
+                if player['hp'] <= 0:
+                    await database_sync_to_async(db_update_player_score)(player['username'], -5)
+                else:
+                    await database_sync_to_async(db_update_player_score)(player['username'], 10)
+
+        print('attack')
+
         await self.channel_layer.group_send(
                         self.room_name,
                         {
@@ -130,7 +165,6 @@ class MultiPlayer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         event = data['event']
         if event == "create player":
-            print("receive")
             await self.create_player(data)
         elif event == "move_to":
             await self.move_to(data)

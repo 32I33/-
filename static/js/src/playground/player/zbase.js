@@ -38,10 +38,8 @@ class Player extends AcGameObject {
             this.fireball_img = new Image();
             this.fireball_img.src= "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
         }
-
         this.cur_skill = null;
     }
-
 
     start(){
         let count = ++ this.playground.player_count;
@@ -113,7 +111,7 @@ class Player extends AcGameObject {
                 if (outer.fireball_coldtime < outer.eps && outer.playground.state === "fighting") {
                     outer.cur_skill = "fireball";
                     outer.fireball_count ++;
-                    outer.fireball_coldtime = 3;
+                    outer.fireball_coldtime = 0.1;
                     return false;
                 }
             }
@@ -155,17 +153,6 @@ class Player extends AcGameObject {
     }
 
     attacked(angle, damage) {
-        this.radius -= damage;
-        if (this.radius < this.eps) {
-            this.destroy();
-            return false;
-        }
-        else {
-            this.damage_speed = damage * 20;
-            this.damage_x = Math.cos(angle);
-            this.damage_y = Math.sin(angle);
-            this.speed *= 0.8;
-        }
         for (let i = 0; i < 20 + Math.random() * 5; i ++ ) {
             let x = this.x;
             let y = this.y;
@@ -177,7 +164,15 @@ class Player extends AcGameObject {
             let move_length = this.radius * Math.random() * 10;
             new Particle(this.playground, x, y, radius, speed, vx, vy, move_length);
         }
-
+        this.radius -= damage;
+        if (this.radius < this.eps) {
+            this.destroy();
+            return false;
+        }
+        this.damage_speed = damage * 20;
+        this.damage_x = Math.cos(angle);
+        this.damage_y = Math.sin(angle);
+        this.speed *= 0.8;
     }
 
     receive_attacked(attacker, x, y, angle, damage, ball_uuid) {
@@ -226,7 +221,15 @@ class Player extends AcGameObject {
     update(){
         this.update_move();
         this.update_coldtime();
+        this.update_win();
         this.render();
+    }
+
+    update_win() {
+        if (this.playground.state === "fighting" && this.character === "me" && this.playground.players.length === 1) {
+            this.playground.score_board.win();
+            this.state === "over";
+        }
     }
 
     update_move() {
@@ -278,7 +281,6 @@ class Player extends AcGameObject {
         }
 
     }
-
 
 
     // 这里是渲染一个新的玩家，也就是一个圆形
@@ -337,6 +339,22 @@ class Player extends AcGameObject {
             this.ctx.lineTo(blink_coldtime_x * scale, blink_coldtime_y * scale);
             this.ctx.fillStyle = "rgba(0, 0, 255, 0.6)";
             this.ctx.fill();
+        }
+    }
+
+    on_destroy() {
+        if (this.character === "me") {
+            if (this.playground.state === "fighting") {         // 是我自己并且处于战斗状态
+                this.playground.state = "over";
+                this.playground.score_board.lose();
+            }
+        }
+        // 找到当前的这个player，然后把他删掉
+        for (let i = 0; i < this.playground.players.length; i ++ ) {
+            if (this.playground.players[i] === this) {
+                this.playground.players.splice(i, 1);
+                break;
+            }
         }
     }
 }

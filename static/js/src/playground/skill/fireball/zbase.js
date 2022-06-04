@@ -83,7 +83,7 @@ class FireBall extends AcGameObject {
     };
     // 其属于是在destroy之前执行
     on_destroy(uuid) {
-        let fireballs = this.players.fireball;
+        let fireballs = this.player.fireballs;
         for (let i = 0; i < fireballs.length; i ++ ) {
             let fireball = fireballs[i];
             if (fireball[i] === this) {

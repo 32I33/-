@@ -30,6 +30,7 @@ class AcGameObject {
     }
 
     destroy() {     //删除该物体
+        this.on_destroy();
         for (let i = 0; i < AC_GAME_OBJECTS.length; i ++ ) {
             if (AC_GAME_OBJECTS[i] == this){
                 AC_GAME_OBJECTS.splice(i, 1);
@@ -44,7 +45,6 @@ let last_timestamp;
 
 // 这个是更新的动画
 let AC_GAME_ANIMATION = function(timestamp) {       // 参数是该timestamp时候调用这个函数
-    
     // 更新一下所有的objects来找到让他的时间更新到timestamp这个时刻
     for (let i = 0; i < AC_GAME_OBJECTS.length; i ++ ) {
         let obj = AC_GAME_OBJECTS[i];
