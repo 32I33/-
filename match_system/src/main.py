@@ -15,6 +15,10 @@ from queue import Queue
 from threading import Thread
 from time import sleep
 
+from acapp.asgi import channel_layer            # 通过信道传输给客户端当前信息
+from asgiref.sync import async_to_sync          # 由于当前的所有的函数都是同步函数，而在channel_layer以及client端中是多线程的并行，而我需要在单线程中嗲用channel_layer以及client里面的函数那么就要并行串行化
+from django.core.cache import cache
+
 queue = Queue()
 
 # 消费者
@@ -32,10 +36,10 @@ class Pool:
         while len(self.players) >= 3:
             self.players = sorted(self.players, key=lambda p: p.score)  # 以积分作为从小到大的排序目标
             flag = False
-            for i in self.players - 2:      # 算法内容：
+            for i in range(len(self.players) - 2):      # 算法内容
                 a , b, c = self.players[i], self.players[i + 1], self.players[i + 2]
                 if self.check_match(a, b) and self.check_match(b, c) and self.check_match(a, c):
-                        match_success([a, b, c])
+                        self.match_success([a, b, c])
                         self.players = self.players[:i] + self.players[i + 3:]
                         flag = True
                         break
@@ -47,6 +51,29 @@ class Pool:
     def match_success(self, ps):        # 匹配成功之后还要加入到房间里面
         # 先看一下输出的信息
         print("Match success: %s %s %s" % (ps[0].username, ps[1].username, ps[2].username))
+        # 将3个人传回去
+        room_name = "room-%s-%s-%s" % (ps[0].uuid, ps[1].uuid, ps[2].uuid)
+        players = []
+        for p in ps:
+            async_to_sync(channel_layer.group_add)(room_name, p.channel_name)   # 先给每个人发当前的房间
+            players.append({
+                'uuid': p.uuid,
+                'username': p.username,
+                'photo': p.photo,
+                'hp': 100,
+            })
+        cache.set(room_name, players, 3600)  # 有效期1小时
+        for p in ps:
+            async_to_sync(channel_layer.group_send)(    # 给每个人的房间群发每个人
+                room_name,
+                {
+                    'type': "group_send_event",
+                    "event": "create player",
+                    "uuid": p.uuid,
+                    "username": p.username,
+                    "photo": p.photo,
+                }
+            )
 
     def increasing_waiting_time(self):
         for player in self.players:

@@ -8,7 +8,8 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-from channels.db import database_sync_to_async
+from game.models.player.player import Player
+from channels.db import database_sync_to_async  #由于在数据库中的都是同步调用，而在create_player里面调用的时候是异步调用，因此也需要异步去操作数据库
 from match_system.src.match_server.match_service import Match
 
 class MultiPlayer(AsyncWebsocketConsumer):
@@ -17,16 +18,16 @@ class MultiPlayer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        print('disconnect')
-        await self.channel_layer.group_discard(self.room_name, self.channel_name);
+        if self.room_name:
+            await self.channel_layer.group_discard(self.room_name, self.channel_name);
 
     # 创建函数的时候不要忘了传进参数self
     async def create_player(self, data):
 
-        self.room_name = None
+        self.room_name = None  # 由于还没有匹配满人，因此先把房间名字定义出来
         self.uuid = data['uuid']
 
-        transport = TSocket.TSocket('localhost', 9090)
+        transport = TSocket.TSocket('127.0.0.1', 9090)
 
         # Buffering is critical. Raw sockets are very slow
         transport = TTransport.TBufferedTransport(transport)
@@ -38,24 +39,24 @@ class MultiPlayer(AsyncWebsocketConsumer):
         client = Match.Client(protocol)
 
         def db_get_player():            # 从数据库中获取username的player的信息
-            return Player.objects.get(user__username=data['username'])
-        # 单线程变多线程，快速获取目标player
+            return Player.objects.get(user__username=data['username'])  # 这里访问数据库是通过__来表示user中的username
+        # 单线程变多线程，快速获取目标player，因为函数用的都是异步代码，这里如果想使用异步代码的话就要在访问数据库的时候把同步异步化
         player = await database_sync_to_async(db_get_player)()
 
         # Connect!
         transport.open()
 
         # 加入生产者队列中
-
         client.add_player(player.score, data['uuid'], data['username'], data['photo'], self.channel_name)
 
         # Close!
         transport.close()
+
     async def move_to(self, data):
         await self.channel_layer.group_send(
                 self.room_name,
                 {
-                    'type': "group_send",
+                    'type': "group_send_event",
                     "event": "move_to",
                     "uuid": data['uuid'],
                     "tx": data['tx'],
@@ -68,7 +69,7 @@ class MultiPlayer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
                     self.room_name,
                     {
-                        "type": "group_send",
+                        "type": "group_send_event",
                         "event": "shoot_fireball",
                         "uuid": data['uuid'],
                         "tx": data['tx'],
@@ -81,7 +82,7 @@ class MultiPlayer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
                         self.room_name,
                         {
-                            "type": "group_send",
+                            "type": "group_send_event",
                             "event": "attacked",
                             "uuid": data['uuid'],
                             "attackee_uuid": data['attackee_uuid'],
@@ -97,7 +98,7 @@ class MultiPlayer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
                             self.room_name,
                             {
-                                "type": "group_send",
+                                "type": "group_send_event",
                                 "event": "blink",
                                 "uuid": data['uuid'],
                                 "tx": data['tx'],
@@ -109,14 +110,19 @@ class MultiPlayer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
                                 self.room_name,
                                 {
-                                    "type": "group_send",
+                                    "type": "group_send_event",
                                     "event": "send_message",
                                     "username": data['username'],
                                     "text": data['text'],
                                     }
                                 )
 
-    async def group_send(self, data):
+    async def group_send_event(self, data):
+        if not self.room_name:
+            keys = cache.keys("*%s*" % (self.uuid))
+            if keys:
+                self.room_name = keys[0]
+                print(keys)
         # 发送给前端当前的玩家信息，并且是一个一个发
         await self.send(text_data=json.dumps(data))
 
