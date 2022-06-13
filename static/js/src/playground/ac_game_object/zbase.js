@@ -16,7 +16,7 @@ class AcGameObject {
     create_uuid() {
         let res = "";
         for (let i = 0; i < 8; i ++ ) {
-            let num = Math.floor(Math.random() * 10);
+            let num = parseInt(Math.floor(Math.random() * 10));
             res += num;
         }
 
@@ -26,13 +26,16 @@ class AcGameObject {
     update() {      // 每一帧都会执行一次
     }
 
+    late_update() {
+    }
+
     on_destroy(){   // 在被销毁之前执行一次
     }
 
     destroy() {     //删除该物体
         this.on_destroy();
         for (let i = 0; i < AC_GAME_OBJECTS.length; i ++ ) {
-            if (AC_GAME_OBJECTS[i] == this){
+            if (AC_GAME_OBJECTS[i] === this){
                 AC_GAME_OBJECTS.splice(i, 1);
                 break;
             }
@@ -56,6 +59,12 @@ let AC_GAME_ANIMATION = function(timestamp) {       // 参数是该timestamp时�
             obj.timedelta = timestamp - last_timestamp;
             obj.update();
         }
+    }
+
+    // 所有的obj最后渲染一次，从而使在数组后面的内容优先显示
+    for (let i = 0; i < AC_GAME_OBJECTS.length; i ++ ) {
+        let obj = AC_GAME_OBJECTS[i];
+        obj.late_update();
     }
     // 更新完所有的object之后就让当前的这个时间点变成下一次判断建个的被减数
     last_timestamp = timestamp;

@@ -74,7 +74,7 @@ class AcGameObject {
     create_uuid() {
         let res = "";
         for (let i = 0; i < 8; i ++ ) {
-            let num = Math.floor(Math.random() * 10);
+            let num = parseInt(Math.floor(Math.random() * 10));
             res += num;
         }
 
@@ -84,13 +84,16 @@ class AcGameObject {
     update() {      // 每一帧都会执行一次
     }
 
+    late_update() {
+    }
+
     on_destroy(){   // 在被销毁之前执行一次
     }
 
     destroy() {     //删除该物体
         this.on_destroy();
         for (let i = 0; i < AC_GAME_OBJECTS.length; i ++ ) {
-            if (AC_GAME_OBJECTS[i] == this){
+            if (AC_GAME_OBJECTS[i] === this){
                 AC_GAME_OBJECTS.splice(i, 1);
                 break;
             }
@@ -114,6 +117,12 @@ let AC_GAME_ANIMATION = function(timestamp) {       // 参数是该timestamp时�
             obj.timedelta = timestamp - last_timestamp;
             obj.update();
         }
+    }
+
+    // 所有的obj最后渲染一次，从而使在数组后面的内容优先显示
+    for (let i = 0; i < AC_GAME_OBJECTS.length; i ++ ) {
+        let obj = AC_GAME_OBJECTS[i];
+        obj.late_update();
     }
     // 更新完所有的object之后就让当前的这个时间点变成下一次判断建个的被减数
     last_timestamp = timestamp;
@@ -197,7 +206,7 @@ class GameMap extends AcGameObject {
     constructor(playground) {
         super();                // 调用基类的函数
         this.playground = playground;
-        this.$canvas = $('<canvas></canvas>'); 
+        this.$canvas = $('<canvas tabindex=0></canvas>'); 
         this.ctx = this.$canvas[0].getContext('2d');
         this.ctx.canvas.width = this.playground.width;
         this.ctx.canvas.height = this.playground.height;
@@ -376,7 +385,6 @@ class Player extends AcGameObject {
         this.playground.game_map.$canvas.mousedown(function(e){
             if (outer.playground.player_count < 3) {
                 return false;
-
             }
             const rect = outer.ctx.canvas.getBoundingClientRect(); // 从canvas里面获取这个画布的矩形框框
             let ee = e.which;
@@ -388,7 +396,6 @@ class Player extends AcGameObject {
                 if (outer.playground.mode === "multi mode"){
                     outer.playground.mps.send_move_to(outer.uuid, tx, ty);
                 }
-
             }
             else if (ee === 1)
             {
@@ -412,7 +419,7 @@ class Player extends AcGameObject {
                 }
             }
         });
-        $(window).keydown(function(e) {                     // 这个是获取键盘输入按键的！
+        this.playground.game_map.$canvas.keydown(function(e) {                     // 这个是获取键盘输入按键的！
             if (e.which === 81) {       // q键
                 if (outer.fireball_coldtime < outer.eps && outer.playground.state === "fighting") {
                     outer.cur_skill = "fireball";
@@ -431,6 +438,7 @@ class Player extends AcGameObject {
             }
             if (e.which === 13) {
                 outer.playground.chat_field.show_input();
+                return false;
             }
             if (e.which === 27) {
                 outer.playground.chat_field.hide_input();
@@ -533,8 +541,8 @@ class Player extends AcGameObject {
 
     update_win() {
         if (this.playground.state === "fighting" && this.character === "me" && this.playground.players.length === 1) {
+            this.playground.state = "over";
             this.playground.score_board.win();
-            this.state === "over";
         }
     }
 
@@ -685,12 +693,13 @@ class ScoreBoard extends AcGameObject {
 
     add_listening_events() {
         let outer = this;
-
-        let $canvas = this.playground.game_map.$canvas;
-        $canvas.on('click', function() {
-            outer.playground.$playground.hide();
-            outer.playground.root.menu.$menu.show();
-        })
+        if (this.playground.game_map) {
+            let $canvas = this.playground.game_map.$canvas;
+            $canvas.on('click', function() {
+                outer.playground.hide();
+                outer.playground.root.menu.show();
+            })
+        }
     }
 
     win() {
@@ -1000,12 +1009,29 @@ class AcGamePlayground {
         this.start();
     };
 
+    // 在这里可以获取我们当前的playground的uuid
+    create_uuid() {
+        let res = '';
+        for (let i = 0; i < 8; i ++ ) {
+            let x = parseInt(Math.floor(Math.random() * 10));
+            res += x;
+        }
+        return res;
+    }
 
     start() {
         let outer = this;
-        $(window).resize(function() {
+        let uuid = this.create_uuid();     // 通过uuid可以判断我们当前的这个界面
+
+        $(window).on(`resize.${uuid}`, function() {
             outer.resize();
         });
+
+        if (this.root.AcWingOS) {
+            this.root.AcWingOS.api.window.on_close(function() {
+                $(window).off(`resize.${uuid}`);
+            })
+        }
     }
 
     resize() {
@@ -1041,7 +1067,7 @@ class AcGamePlayground {
         this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
 
         if (mode == "single mode"){
-            for (let i = 0; i < 5; i ++ ) {
+            for (let i = 0; i < 2; i ++ ) {
                 this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, this.colors[Math.floor(Math.random() * 5)], 0.15, "robot"));
             }
         }
@@ -1057,6 +1083,24 @@ class AcGamePlayground {
         }
     }
     hide(){
+        // 把所有的内容删掉
+        while (this.players && this.players.length > 0) {
+            this.players[0].destroy();
+        }
+        if (this.notice_board) {
+            this.notice_board.destroy();
+            this.notice_board = null;
+        }
+        if (this.score_board) {
+            this.score_board.destroy();
+            this.score_board = null;
+        }
+        if (this.game_map) {
+            this.game_map.destroy();
+            this.game_map = null;
+        }
+
+        this.$playground.empty();
         this.$playground.hide();
     }
 }
@@ -1362,11 +1406,11 @@ class Settings {
         })
     }
     hide(){
-
+        this.$settings.hide();
     }
 
     show(){
-
+        this.$settings.show();
     }
 }
 export class AcGame {

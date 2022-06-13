@@ -298,10 +298,10 @@ class Settings {
         })
     }
     hide(){
-
+        this.$settings.hide();
     }
 
     show(){
-
+        this.$settings.show();
     }
 }

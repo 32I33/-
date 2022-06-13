@@ -18,12 +18,13 @@ class ScoreBoard extends AcGameObject {
 
     add_listening_events() {
         let outer = this;
-
-        let $canvas = this.playground.game_map.$canvas;
-        $canvas.on('click', function() {
-            outer.playground.$playground.hide();
-            outer.playground.root.menu.$menu.show();
-        })
+        if (this.playground.game_map) {
+            let $canvas = this.playground.game_map.$canvas;
+            $canvas.on('click', function() {
+                outer.playground.hide();
+                outer.playground.root.menu.show();
+            })
+        }
     }
 
     win() {

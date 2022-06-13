@@ -70,7 +70,6 @@ class Player extends AcGameObject {
         this.playground.game_map.$canvas.mousedown(function(e){
             if (outer.playground.player_count < 3) {
                 return false;
-
             }
             const rect = outer.ctx.canvas.getBoundingClientRect(); // 从canvas里面获取这个画布的矩形框框
             let ee = e.which;
@@ -82,7 +81,6 @@ class Player extends AcGameObject {
                 if (outer.playground.mode === "multi mode"){
                     outer.playground.mps.send_move_to(outer.uuid, tx, ty);
                 }
-
             }
             else if (ee === 1)
             {
@@ -106,7 +104,7 @@ class Player extends AcGameObject {
                 }
             }
         });
-        $(window).keydown(function(e) {                     // 这个是获取键盘输入按键的！
+        this.playground.game_map.$canvas.keydown(function(e) {                     // 这个是获取键盘输入按键的！
             if (e.which === 81) {       // q键
                 if (outer.fireball_coldtime < outer.eps && outer.playground.state === "fighting") {
                     outer.cur_skill = "fireball";
@@ -125,6 +123,7 @@ class Player extends AcGameObject {
             }
             if (e.which === 13) {
                 outer.playground.chat_field.show_input();
+                return false;
             }
             if (e.which === 27) {
                 outer.playground.chat_field.hide_input();
@@ -227,8 +226,8 @@ class Player extends AcGameObject {
 
     update_win() {
         if (this.playground.state === "fighting" && this.character === "me" && this.playground.players.length === 1) {
+            this.playground.state = "over";
             this.playground.score_board.win();
-            this.state === "over";
         }
     }
 
