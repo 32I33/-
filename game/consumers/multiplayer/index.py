@@ -101,16 +101,16 @@ class MultiPlayer(AsyncWebsocketConsumer):
         if remain_cnt > 1:
             if self.room_name:
                 cache.set(self.room_name, players, 3600)        # 重新把他set进去，因为重新拿了出来，重新设立一遍
-        else:
-            def db_update_player_score(username, score):
-                player = Player.objects.get(user__username)
-                player.score += score
-                player.save()
-            for player in players:
-                if player['hp'] <= 0:
-                    await database_sync_to_async(db_update_player_score)(player['username'], -5)
-                else:
-                    await database_sync_to_async(db_update_player_score)(player['username'], 10)
+       # else:
+        #    def db_update_player_score(username, score):
+         #       player = Player.objects.get(user__username)
+          #      player.score += score
+           #     player.save()
+           # for player in players:
+            #    if player['hp'] <= 0:
+             #       await database_sync_to_async(db_update_player_score)(player['username'], -5)
+              #  else:
+               #     await database_sync_to_async(db_update_player_score)(player['username'], 10)
 
         print('attack')
 

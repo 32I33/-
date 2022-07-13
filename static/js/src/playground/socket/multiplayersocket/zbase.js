@@ -116,7 +116,6 @@ class MultiPlayerSocket {
             this.playground.width / 2 / this.playground.scale,
             0.5,
             0.05,
-
             "white",
             0.15,
             "enemy",
@@ -154,7 +153,6 @@ class MultiPlayerSocket {
     }
 
     receive_message(username, text) {
-        console.log("mess")
         this.playground.chat_field.show_history();
         this.playground.chat_field.add_message(username, text);
     }

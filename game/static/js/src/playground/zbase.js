@@ -88,6 +88,7 @@ class AcGamePlayground {
             }
         }
     }
+    // 是在玩家死亡之后点击屏幕任意位置回到菜单界面
     hide(){
         // 把所有的内容删掉
         while (this.players && this.players.length > 0) {

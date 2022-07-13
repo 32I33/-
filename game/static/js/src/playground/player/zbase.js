@@ -142,7 +142,7 @@ class Player extends AcGameObject {
             }
         }
     }
-
+    // 闪现
     blink(tx, ty) {
         let d = this.get_dist(this.x, this.y, tx, ty);
         d = Math.min(d, 0.8);
@@ -175,7 +175,7 @@ class Player extends AcGameObject {
     }
 
     receive_attacked(attacker, x, y, angle, damage, ball_uuid) {
-        attacker.destroy_fireball(attacker, ball_uuid);
+        attacker.destroy_fireball(attacker, ball_uuid);  // 攻击者的火消失
         this.x = x;
         this.y = y;
 
@@ -268,7 +268,7 @@ class Player extends AcGameObject {
         }
 
     }
-
+    // 冷却时间
     update_coldtime() {
         if (this.character !== "me")
             return false;
@@ -304,6 +304,7 @@ class Player extends AcGameObject {
         }
     }
     render_coldtime() {
+        // 火球
         let fireball_coldtime_x = 1.5, fireball_coldtime_y = 0.9;
         let r = 0.04;
         let scale = this.playground.scale;
@@ -323,6 +324,7 @@ class Player extends AcGameObject {
             this.ctx.fill();
         }
 
+        // 闪现
         let blink_coldtime_x = 1.6, blink_coldtime_y = 0.8;
         this.ctx.save();
         this.ctx.beginPath();
