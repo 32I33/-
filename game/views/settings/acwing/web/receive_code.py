@@ -1,7 +1,6 @@
-from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.core.cache import cache
-import requests                 # 因为要请求其他的url
+import requests
 from django.contrib.auth.models import User
 from game.models.player.player import Player
 from django.contrib.auth import login
@@ -9,43 +8,46 @@ from random import randint
 
 
 def receive_code(request):
-    data = request.GET          # 这里的GET相当于acwing来访问我们的网络, 传回来给我们code（授权码）
+    data = request.GET
     code = data.get('code')
     state = data.get('state')
+
     if not cache.has_key(state):
         return redirect("index")
     cache.delete(state)
+
     apply_access_token_url = "https://www.acwing.com/third_party/api/oauth2/access_token/"
     params = {
         'appid': "1495",
         'secret': "dcef24ccfa8e49f98e6ff23b29744d30",
-        'code': code,
+        'code': code
     }
+
     access_token_res = requests.get(apply_access_token_url, params=params).json()
-    print(access_token_res) # 测试
+
     access_token = access_token_res['access_token']
     openid = access_token_res['openid']
 
-    # id判断是否已经在里面了
-    player = Player.objects.filter(openid=openid)
-    if player.exists():
-        login(request, player[0].user)
-        return redirect ("index")
+    players = Player.objects.filter(openid=openid)
+    if players.exists():  # 如果该用户已存在，则无需重新获取信息，直接登录即可
+        login(request, players[0].user)
+        return redirect("index")
 
-    getinfo_url = "https://www.acwing.com/third_party/api/meta/identity/getinfo/"
+    get_userinfo_url = "https://www.acwing.com/third_party/api/meta/identity/getinfo/"
     params = {
         "access_token": access_token,
-        "openid": openid,
-     }
-    getinfo_res = requests.get(getinfo_url, params=params).json()
-    username = getinfo_res['username']
-    photo = getinfo_res['photo']
+        "openid": openid
+    }
+    userinfo_res = requests.get(get_userinfo_url, params=params).json()
+    username = userinfo_res['username']
+    photo = userinfo_res['photo']
 
-    # 如果说重名的话，就在后面加数字，每次都加一个数字，这样加多个数字之后他相同名字的概率就小之又小
-    while User.objects.filter(username=username).exists():
-        username += str(randint(0,9))
+    while User.objects.filter(username=username).exists():  # 找到一个新用户名
+        username += str(randint(0, 9))
 
     user = User.objects.create(username=username)
     player = Player.objects.create(user=user, photo=photo, openid=openid)
+
     login(request, user)
+
     return redirect("index")

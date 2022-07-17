@@ -111,7 +111,11 @@ class Settings {
     }
     start(){
         if (this.platform === "WEB") {
-            this.getinfo_web();
+            if (this.root.access) {
+                this.getinfo_web();
+            } else {
+                this.login();
+            }
             this.add_listening_events();
         }
         else if (this.platform === "ACAPP") {
@@ -170,22 +174,27 @@ class Settings {
         let outer = this;
         let username = this.$login_username.val();
         let password = this.$login_password.val();
-
-        $.ajax ({
-            url: "https://app1495.acapp.acwing.com.cn/settings/login/",
-            type:"GET",
-            data: {
-                username:username,
-                password:password,
-            },
-            success: function(resp) {
-                if (resp.result === "success") {
-                    location.reload();
-                } else {
-                    outer.$login_error_message.html(resp.result);
+        try {
+            $.ajax ({
+                url: "https://app1495.acapp.acwing.com.cn/settings/token/",
+                type:"post",
+                data: {
+                    username:username,
+                    password:password,
+                },
+                success: resp => {
+                    console.log(resp);
+                    this.root.access = resp.access;
+                    this.root.refresh = resp.refresh;
+                    this.getinfo_web();
+                },
+                error: () => {
+                    this.$login_error_message.html("用户名或者密码错误");
                 }
-            }
-        })
+            })
+        } catch {
+
+        }
     }
 
     logout_on_remote() {
@@ -193,18 +202,9 @@ class Settings {
         if (this.platform === "ACAPP") {
             this.root.AcWingOS.api.window.close();          // AcWing上面的窗口关闭
         } else {
-            $.ajax({
-                url: "https://app1495.acapp.acwing.com.cn/settings/logout/",
-                type: "GET",
-                success: function(resp){
-                    if (resp.result === "success") {
-                        // 刷新之后会回到登陆界面，因为是未授权状态
-                        location.reload();
-                    } else {
-                        return resp.result;
-                    }
-                }
-            })
+            this.root.access = "";
+            this.root.refresh = "";
+            location.href = "/";            // 重定向到首页
         }
     }
 
@@ -252,6 +252,7 @@ class Settings {
         this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp){
             // 通过该函数(callback)来接受的内容
             if (resp.result === "success"){
+                console.log(resp);
                 outer.username = resp.username;
                 outer.photo = resp.photo;
                 outer.$settings.hide();
@@ -277,9 +278,12 @@ class Settings {
         let outer = this;
         $.ajax({
             url: "https://app1495.acapp.acwing.com.cn/settings/getinfo/",
-            type: "GET",
+            type: "get",
             data: {
                 platform: outer.platform,
+            },
+            headers: {
+                'Authorization': "Bearer " + this.root.access,          // 头名字这里的Bearer是自己定义在settings.py里面定义的
             },
             success: function(resp){
 

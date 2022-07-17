@@ -1,14 +1,17 @@
 from django.urls import path, include
-from game.views.settings.getinfo import getinfo
-from game.views.settings.login import signin
 from game.views.settings.register import register
-from game.views.settings.logout import signout
+from game.views.settings.getinfo import InfoView
+
+from rest_framework_simplejwt.views import (
+        TokenObtainPairView,
+        TokenRefreshView,
+)
 
 urlpatterns = [
-    path("getinfo/", getinfo, name="settings_getinfo"),      # 第一个参数是路径名字，第二个参数名是函数，第三个是名字
-    path("login/", signin, name="settings_login"),
+    path("token/", TokenObtainPairView.as_view(), name="settings_token"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="settings_token_refresh"),
+    path("getinfo/", InfoView.as_view(), name="settings_getinfo"),
     path("register/", register, name="settings_register"),
-    path("logout/", signout, name="settings_logout"),
     path("acwing/",include("game.urls.settings.acwing.index")),
 ]
 
