@@ -8,4 +8,5 @@ urlpatterns = [
     path("playground/", include("game.urls.playground.index")),
     path("settings/", include("game.urls.settings.index")),
     path("react_calculator/", include("game.urls.react_calculator.index")),
+    path("BigScreenApp/", include("game.urls.BigScreenApp.index"))
 ]

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- 设置文档的格式为html文档格式,文档编码格式为utf-8编码 -->
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    
+    <!-- 设置文档的标题属性 -->
+    <title>健康云可视化系统</title>
+
+    <!-- 引入css文件 -->
+    <link rel="stylesheet" href="css/index.css">
+
+    <!-- 引入图标 -->
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+</head>
+
+<body id="content">
+    <div id="container">
+        <!-- ↓头部↓ -->
+        <div class="header">
+            <!-- ↓头部左边部分↓ -->
+            <div class="header-left" id="time"></div>
+            <!-- ↑头部左边部分↑ -->
+
+            <!-- ↓头部中间部分↓ -->
+            <div class="header-middle">
+                <p>健康云可视化系统</p>
+                <div class="header-img"></div>
+            </div>
+            <!-- ↑头部中间部分↑ -->
+
+            <!-- ↓头部右边部分↓ -->
+            <div class="header-right"></div>
+            <!-- ↑头部右边部分↑ -->
+        </div>
+        <!-- ↑头部↑ -->
+
+        <!-- ↓主体1↓ -->
+        <div class="main-one">
+            <!-- ↓主体1左边部分↓ -->
+            <div class="main-one-left">
+                <!-- ↓异常展示图表↓ -->
+                <div class="left-top">
+                    <p>异常展示</p>
+                    <div id="scroll">
+                        <!-- ↓滚动图头部↓ -->
+                        <div id="scrollHeader">
+                            <span>姓名</span>
+                            <span>地区</span>
+                            <span>异常类型</span>
+                            <span>时间</span>
+                        </div>
+                        <!-- ↑滚动图头部↑ -->
+
+                        <!-- ↓滚动内容↓ -->
+                        <div id="scrollContent">
+                            <ul>
+                                <!-- 每个li包含了一个患者的姓名、地区、异常类型以及发现时间 -->
+                                <li>
+                                    <span>张山</span>
+                                    <span>深圳市</span>
+                                    <span>心电异常</span>
+                                    <span>2021-1-11 15:30:24</span>
+                                </li>
+                                <li>
+                                    <span>李力</span>
+                                    <span>深圳市</span>
+                                    <span>呼吸异常</span>
+                                    <span>2021-1-11 15:30:24</span>
+                                </li>
+                                <li>
+                                    <span>王武</span>
+                                    <span>深圳市</span>
+                                    <span>血压异常</span>
+                                    <span>2021-1-11 15:30:24</span>
+                                </li>
+                                <li>
+                                    <span>连谷影</span>
+                                    <span>深圳市</span>
+                                    <span>血氧异常</span>
+                                    <span>2021-1-11 15:30:24</span>
+                                </li>
+                                <li>
+                                    <span>钟姗姗</span>
+                                    <span>深圳市</span>
+                                    <span>体温异常</span>
+                                    <span>2021-1-11 15:30:24</span>
+                                </li>
+                                <li>
+                                    <span>吴毅豪</span>
+                                    <span>深圳市</span>
+                                    <span>心电异常</span>
+                                    <span>2021-1-11 15:30:24</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- ↑滚动内容↑ -->
+                    </div>
+                </div>
+                <!-- ↑异常展示图表↑ -->
+
+                <!-- ↓用户排行图表↓ -->
+                <div class="left-bottom">
+                    <p>用户排行</p>
+                    <div id="rank"></div>
+                </div>
+                <!-- ↑用户排行图表↑ -->
+            </div>
+            <!-- ↑主体1左边部分↑ -->
+
+            <!-- ↓主体1中间部分↓ -->
+            <!-- ↓地理分布图表↓ -->
+            <div class="main-one-middle">
+                <p>地理分布</p>
+                <div id="map"></div>
+            </div>
+            <!-- ↑地理分布图表↑ -->
+            <!-- ↑主体1中间部分↑ -->
+
+            <!-- ↓主体1右边部分↓ -->
+            <div class="main-one-right">
+                <!-- ↓年龄分布图表↓ -->
+                <div class="right-top">
+                    <p>年龄分布</p>
+                    <div id="age"></div>
+                </div>
+                <!-- ↑年龄分布图表↑ -->
+
+                <!-- ↓性别比例图表↓ -->
+                <div class="right-bottom">
+                    <p>性别比例</p>
+                    <div id="sex">
+                        <!-- 男性水状图 -->
+                        <div id="man"></div>
+
+                        <!-- 女性水状图 -->
+                        <div id="female"></div>
+
+                        <!-- 性别名称 -->
+                        <div id="sex-type">
+                            <span>男</span>
+                            <span>女</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- ↑性别比例图表↑ -->
+            </div>
+            <!-- ↑主体1右边部分↑ -->
+        </div>
+        <!-- ↑主体1↑ -->
+
+        <!-- ↓主体2↓ -->
+        <div class="main-two">
+            <!-- ↓主体2左边部分↓ -->
+            <!-- ↓参数展示图表↓ -->
+            <div class="main-two-left">
+                <p>参数展示</p>
+                <div id="parameter">
+                    <!-- 图表标题 -->
+                    <p id="age-type">0-19岁</p>
+                    <!-- ↓参数展示图表左边部分↓ -->
+                    <div class="parameter-left">
+                        <!-- ↓呼吸图表↓ -->
+                        <div class="respValue">
+                            <div id="respChart"></div>
+                            <div class="parameter-bg1"></div>
+                            <div class="parameter-bg2"></div>
+                            <span>呼吸</span>
+                        </div>
+                        <!-- ↑呼吸图表↑ -->
+
+                        <!-- ↓体温图表↓ -->
+                        <div class="tempValue">
+                            <div id="tempChart"></div>
+                            <div class="parameter-bg1"></div>
+                            <div class="parameter-bg2"></div>
+                            <span>体温</span>
+                        </div>
+                        <!-- ↑体温图表↑ -->
+
+                        <!-- ↓血氧图表↓ -->
+                        <div class="spo2Value">
+                            <div id="spo2Chart"></div>
+                            <div class="parameter-bg1"></div>
+                            <div class="parameter-bg2"></div>
+                            <span>血氧</span>
+                        </div>
+                        <!-- ↑血氧图表↑ -->
+                    </div>
+                    <!-- ↑参数展示图表左边部分↑ -->
+
+                    <!-- ↓参数展示图表右边部分↓ -->
+                    <div class="parameter-right">
+                        <div class="pressureValue">
+                            <div id="pressureChart"></div>
+                            <div class="parameter-bg3"></div>
+                            <div class="parameter-bg4"></div>
+                            <div class="parameter-bg5"></div>
+                            <div class="pressure-picture"></div>
+                        </div>
+                        <div class="heartValue">
+                            <div id="heartChart"></div>
+                            <div class="parameter-bg3"></div>
+                            <div class="parameter-bg4"></div>
+                            <div class="parameter-bg5"></div>
+                            <div class="heart-picture"></div>
+                        </div>
+                        <div class="pulseValue">
+                            <div id="pulseChart"></div>
+                            <div class="parameter-bg3"></div>
+                            <div class="parameter-bg4"></div>
+                            <div class="parameter-bg5"></div>
+                            <div class="pulse-picture"></div>
+                        </div>
+                    </div>
+                    <!-- ↑参数展示图表右边部分↑ -->
+                </div>
+            </div>
+            <!-- ↑参数展示图表↑ -->
+            <!-- ↑主体2左边部分↑ -->
+
+            <!-- ↓主体2中间部分↓ -->
+            <!-- ↓生命参数图表↓ -->
+            <div class="main-two-middle">
+                <p>生命参数</p>
+                <!-- 生命参数图表背景 -->
+                <div id="bg"></div>
+                <div id ="life">
+                    <!-- 生命参数图片1 -->
+                    <div class="body-img1"></div>
+                    <!-- 生命参数图片2 -->
+                    <div class="body-img2"></div>
+                    <!-- ↓波纹↓ -->
+                    <div class="wave">
+                        <img id="wave1" src="./image/wave1.png" alt="">
+                        <img id="wave2" src="./image/wave2.png" alt="">
+                        <img id="wave3" src="./image/wave3.png" alt="">
+                        <img id="wave4" src="./image/wave4.png" alt="">
+                        <img id="wave5" src="./image/wave5.png" alt="">
+                        <img id="wave6" src="./image/wave6.png" alt="">
+                    </div>
+                    <!-- ↑波纹↑ -->
+
+                    <!-- ↓图片环绕↓ -->
+                    <div class="surround">
+                        <div class="carousel">
+                            <figure><span>体温</span> <img src="./image/temp1.png" alt=""></figure>
+                            <figure><span>心电</span><img src="./image/heart1.png" alt=""></figure>
+                            <figure><span>呼吸</span><img src="./image/resp1.png" alt=""></figure>
+                            <figure><span>血压</span><img src="./image/pressure1.png" alt=""></figure>
+                            <figure><span>血氧</span><img src="./image/spo21.png" alt=""></figure>
+                        </div>
+                    </div>
+                    <!-- ↑图片环绕↑ -->
+                </div>
+            </div>
+            <!-- ↑生命参数图表↑ -->
+            <!-- ↑主体2中间部分↑ -->
+
+            <!-- ↓主体2右边部分↓ -->
+            <div class="main-two-right">
+                <!-- ↓测量统计图表↓ -->
+                <div class="right-top">
+                    <p>测量统计</p>
+                    <div id="measure">
+                        <ul>
+                            <li class="list" id="temp"></li>
+                            <li class="list" id="resp"></li>
+                            <li class="list" id="heart"></li>
+                            <li class="list" id="pulse"></li>
+                            <li class="list" id="spo2"></li>
+                            <li class="list" id="diastolic"></li>
+                            <li class="list" id="systolic"></li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- ↑测量统计图表↑ -->
+
+                <!-- ↓异常统计图表↓ -->
+                <div class="right-bottom">
+                    <p>异常统计</p>
+                    <div id="exception"></div>
+                </div>
+                <!-- ↑异常统计图表↑ -->
+            </div>
+            <!-- ↑主体2右边部分↑ -->
+        </div>
+        <!-- ↑主体2↑ -->
+    </div>
+
+    <!-- 引入jquery库 -->
+    <script src="./lib/js/jquery.js"></script>
+
+    <!-- 引入时间实时获取文件 -->
+    <script src="./js/time.js"></script>
+
+    <!-- 引入界面跳转实现文件 -->
+    <script src="./js/switch.js"></script>
+
+    <!-- 引入屏幕自适应文件 -->
+    <script src="./js/scale.js"></script>
+
+    <!-- 引入弹窗配置文件 -->
+    <script src="./lib/layer/layer.js"></script>
+
+    <!-- 引入异常展示图表实现文件 -->
+    <script src="./js/scroll.js"></script>
+
+    <!-- 引入echarts图表库 -->
+    <script src="./lib/js/echarts.min.js"></script>
+
+    <!-- 引入用户排行图表实现文件 -->
+    <script src="./js/rank.js"></script>
+
+    <!-- 引入中国地图地理位置文件 -->
+    <script src="./lib/js/china.js"></script>
+
+    <!-- 引入中国各省份经纬度文件 -->
+    <script src="./lib/js/provinces.js"></script>
+
+    <!-- 引入地理分布图表实现文件 -->
+    <script src="./js/map.js"></script>
+
+    <!-- 引入年龄分布图表实现文件 -->
+    <script src="./js/age.js"></script>
+
+    <!-- 引入echarts水状图图表库 -->
+    <script src="./lib/js/echarts-liquidfill.js"></script>
+
+    <!-- 引入性别分布图表实现文件 -->
+    <script src="./js/sex.js"></script>
+
+    <!-- 引入参数展示图表实现文件 -->
+    <script src="./js/parameter.js"></script>
+
+    <!-- 引入测量统计图表实现文件 -->
+    <script src="./js/measure.js"></script>
+
+    <!-- 引入echarts常用3d图表库 -->
+    <script src="./lib/js/echarts-gl.js"></script>
+
+    <!-- 引入异常统计图实现文件 -->
+    <script src="./js/exception.js"></script>
+</body>
+
+</html>

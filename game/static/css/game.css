@@ -7,14 +7,11 @@
 
 }
 .ac-game-settings-login {
-    height: 30vh;
+    height: 40vh;
     width: 20vw;
     background-color: rgba(0, 0, 0, 0.7);
-    position: relative;
-    top: 50%;
-    left: 50%;
     transform: translate(-50%, -50%);
-    border-radius: 5px;
+    border-radius: 7vh;
 }
 
 .ac-game-settings-register {
@@ -25,7 +22,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    border-radius: 5px;
+    border-radius: 7vh;
 }
 
 .ac-game-settings-title {
@@ -53,7 +50,6 @@
 }
 
 .ac-game-settings-item {
-    height: 100%;
     width: 100%;
 }
 
@@ -78,7 +74,6 @@
     transform: translate(-50%, -50%);
     background-color: #4CAF50;
     border-radius: 5px;
-
 }
 
 .ac-game-settings-option {
@@ -100,7 +95,6 @@
 .ac-game-settings-acwing {
     display: block;
     height: 7vh;
-
     text-align: center;
     color: white;
     font-size: 2vh;

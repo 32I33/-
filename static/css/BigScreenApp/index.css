@@ -1,0 +1,920 @@
+/* 去除默认样式 */
+* {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 引入外部字体 */
+@font-face {
+  font-family: myfont;
+  src: url('/static/js/BigScreenApp/lib/fonts/tapeworm.eot');
+  src: url('/static/js/BigScreenApp/lib/fonts/tapeworm.eot?#iefix') format('embedded-opentype'), url('/static/js/BigScreenApp/lib/fonts/tapeworm.ttf') format('truetype'), url('/static/js/BigScreenApp/lib/fonts/tapeworm.svg#tapewormregular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* 为整个界面添加背景样式 */
+html {
+  height: 100%;
+  width: 100%;
+  background-color: #064066;
+}
+
+/* 设定界面展示的宽高 */
+body {
+  overflow: hidden;
+  width: 1920px;
+  height: 969px;
+}
+
+/* 让界面内容居中显示，两侧留有空隙 */
+#container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 20px;
+  height: 100%;
+}
+
+/* 头部 */
+.header {
+  width: 100%;
+  height: 15%;
+}
+
+/* 头部左边部分 */
+.header-left {
+  float: left;
+  width: 25%;
+  height: 100%;
+  font-family: myfont;
+  font-weight: 700;
+  font-size: 25px;
+  line-height: 100px;
+  text-shadow: 0 0 24px #09b0d3;
+  color: #09b0d3;
+}
+
+/* 头部中间部分 */
+.header-middle {
+  position: relative;
+  float: left;
+  width: 50%;
+  height: 100%;
+}
+
+/* 标题样式 */
+.header-middle p {
+  font-family: myfont;
+  font-weight: 700;
+  font-size: 40px;
+  text-align: center;
+  text-shadow: 0 0 24px #09b0d3;
+  color: #09b0d3;
+}
+
+/* 添加头部动态图片 */
+.header-img {
+  position: absolute;
+  top: 30px;
+  height: 50%;
+  width: 100%;
+  background: url("/static/image/BigScreenApp/image/head.gif") no-repeat center center;
+  background-size: 100%;
+}
+
+/* 头部右边部分 */
+.header-right {
+  float: left;
+  width: 25%;
+  height: 100%;
+}
+
+/* 主体界面布局 */
+.main-one, .main-two {
+  position: absolute;
+  width: 100%;
+  height: 85%;
+  transform: scale(0.5, 0.5);
+  transition: transform 0.5s linear, opacity 0.5s linear;
+  opacity: 0;
+}
+
+/* 主体界面正常显示样式 */
+.show {
+  transform: scale(1, 1);
+  opacity: 1;
+}
+
+/* 设置每个图表标题样式 */
+.main-one, .main-two p {
+  font-size: 25px;
+  font-weight: 700;
+  color: #fdd845;
+}
+
+/* 主体1左边部分 */
+.main-one-left {
+  float: left;
+  width: 30%;
+  height: 100%;
+}
+
+/* 主体1左上部分 */
+.main-one-left .left-top {
+  width: 100%;
+  height: 50%;
+}
+
+/* 异常展示图表布局 */
+#scroll {
+  margin: 15px auto 0 0;
+  width: 95%;
+  height: 85%;
+  background-color: #ffffff0a;
+}
+
+/* 异常展示图表头部宽度设置 */
+#scrollHeader {
+  width: 100%;
+}
+
+/* 设置异常展示图表头部样式 */
+#scrollHeader span {
+  float: left;
+  margin: 5px 0;
+  width: 20%;
+  font-size: 20px;
+  font-family: myfont;
+  font-weight: 700;
+  text-align: center;
+  color: #61d2f7;
+}
+
+/* 设置异常展示图表头部最后一列所占宽度为40%,其余列为20% */
+#scrollHeader span:last-child {
+  width: 40%;
+}
+
+/* 使异常展示图表显示内容的溢出部分隐藏 */
+#scrollContent {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 90%;
+}
+
+/* 设置绝对定位 */
+#scrollContent ul {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+/* 设置异常展示图表行间距离以及每一行所占的高度 */
+#scrollContent ul li {
+  margin-top: 10px;
+  width: 100%;
+  height: 60px;
+}
+
+/* 为序号为奇数的li添加边框阴影 */
+#scrollContent ul li:nth-of-type(odd) {
+  box-shadow: -10px 0px 15px #0aadee inset, 10px 0px 15px #034c6a inset;
+}
+
+/* 设置滚动显示内容的样式 */
+#scrollContent ul li span {
+  float: left;
+  margin-top: 20px;
+  width: 20%;
+  font-size: 15px;
+  text-align: center;
+  color: #fff;
+}
+
+/* 设置异常展示图表展示内容最后一列所占宽度为40%,其余列为20% */
+#scrollContent ul li span:last-child {
+  width: 40%;
+}
+
+/* 主体1左下部分 */
+.main-one-left .left-bottom {
+  width: 100%;
+  height: 50%;
+}
+
+/* 用户排行图表布局 */
+#rank {
+  margin: 15px auto 0 0;
+  width: 95%;
+  height: 85%;
+  background-color: #ffffff0a;
+}
+
+/* 主体1中间部分 */
+.main-one-middle {
+  float: left;
+  width: 47%;
+  height: 100%;
+}
+
+/* 地理分布图表布局 */
+#map {
+  margin: 15px auto 0 0;
+  width: 97%;
+  height: 92%;
+  background-color: #ffffff0a;
+}
+
+/* 设置地图提示框样式 */
+.showTip {
+  margin: -10px;
+  padding: 10px;
+  font-size: 25px;
+  line-height: 50px;
+  background-color: #1fa8c0;
+  color: #fff;
+}
+
+/* 主体1右边部分 */
+.main-one-right {
+  float: left;
+  width: 23%;
+  height: 100%;
+}
+
+/* 主体1右上部分 */
+.main-one-right .right-top {
+  width: 100%;
+  height: 50%;
+}
+
+/* 年龄分布图表布局 */
+#age {
+  margin-top: 15px;
+  width: 100%;
+  height: 85%;
+  background-color: #ffffff0a;
+}
+
+/* 主体1右下部分 */
+.main-one-right .right-bottom {
+  width: 100%;
+  height: 50%;
+}
+
+/* 性别比例图表布局 */
+#sex {
+  margin-top: 15px;
+  width: 100%;
+  height: 85%;
+  background-color: #ffffff0a;
+}
+
+/* 男性水状图宽高设置 */
+#man {
+  float: left;
+  width: 50%;
+  height: 80%;
+}
+
+/* 女性水状图宽高设置 */
+#female {
+  float: left;
+  width: 50%;
+  height: 80%;
+}
+
+/* 性别名称宽高设置 */
+#sex-type {
+  float: left;
+  width: 100%;
+  height: 20%;
+}
+
+/* 设置性别名称字体样式 */
+#sex-type span {
+  float: left;
+  width: 50%;
+  font-size: 20px;
+  font-weight: lighter;
+  text-align: center;
+  color: #fff;
+}
+
+/* 主体2左边部分 */
+.main-two-left {
+  float: left;
+  width: 35%;
+  height: 100%;
+}
+
+/* 参数展示图表布局 */
+#parameter {
+  margin: 15px auto 0 0;
+  width: 95%;
+  height: 92%;
+  background-color: #ffffff0a;
+}
+
+/* 参数展示图表标题样式 */
+#parameter p {
+  display: block;
+  width: 100%;
+  height: 6%;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 60px;
+  text-align: center;
+  color: #7bffe2;
+}
+
+/* 参数展示图表背景1 */
+.parameter-bg1 {
+  position: absolute;
+  left: -3%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/circle1.png") no-repeat center center;
+  background-size: 20%;
+  -webkit-animation: rotate 6s linear infinite;
+  animation: rotate 6s linear infinite;
+}
+
+/* 参数展示图表背景2 */
+.parameter-bg2 {
+  position: absolute;
+  left: -3%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/circle2.png") no-repeat center center;
+  background-size: 48%;
+  -webkit-animation: rotate 8s linear infinite;
+  animation: rotate 8s linear infinite;
+}
+
+/* 参数展示图表背景3 */
+.parameter-bg3 {
+  position: absolute;
+  left: -17%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/circle3.png") no-repeat center center;
+}
+
+/* 参数展示图表背景4 */
+.parameter-bg4 {
+  position: absolute;
+  left: -17%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/circle4.png") no-repeat center center;
+  background-size: 50% 65%;
+  -webkit-animation: rotate 4s linear infinite;
+  animation: rotate 4s linear infinite;
+}
+
+/* 参数展示图表背景5 */
+.parameter-bg5 {
+  position: absolute;
+  left: -17%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/circle5.png") no-repeat center center;
+  background-size: 32% 40%;
+  -webkit-animation: rotate 2s linear infinite;
+  animation: rotate 2s linear infinite;
+}
+
+/* 设置参数展示图表左边部分宽高 */
+.parameter-left {
+  float: left;
+  width: 50%;
+  height: 94%;
+}
+
+/* 设置参数展示图表左边部分字体样式 */
+.parameter-left span {
+  position: absolute;
+  top: 67%;
+  left: 40%;
+  font-size: 25px;
+  font-weight: 700;
+  color: #7bffe2;
+}
+
+/* 设置呼吸图表宽高及位置 */
+.respValue {
+  position: relative;
+  margin-top: 3.3%;
+  width: 100%;
+  height: 30%;
+}
+
+/* 设置呼吸背景图片 */
+#respChart {
+  position: absolute;
+  left: -3%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/resp.png") no-repeat center center;
+  background-size: 20% 25%;
+}
+
+/* 设置体温图表宽高及位置 */
+.tempValue {
+  position: relative;
+  margin-top: 3.3%;
+  width: 100%;
+  height: 30%;
+}
+
+/* 设置体温背景图片 */
+#tempChart {
+  position: absolute;
+  left: -3%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/temp.png") no-repeat center center;
+  background-size: 20% 25%;
+}
+
+/* 设置血氧图表宽高及位置 */
+.spo2Value {
+  position: relative;
+  margin-top: 3.3%;
+  width: 100%;
+  height: 30%;
+}
+
+/* 设置血氧背景图片 */
+#spo2Chart {
+  position: absolute;
+  left: -3%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/spo2.png") no-repeat center center;
+  background-size: 20% 25%;
+}
+
+/* 设置参数展示图表右边部分宽高 */
+.parameter-right {
+  float: left;
+  width: 50%;
+  height: 94%;
+}
+
+/* 设置血压图表宽高及位置 */
+.pressureValue {
+  position: relative;
+  width: 100%;
+  height: 33.3%;
+}
+
+/* 设置绝对定位 */
+#pressureChart {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* 设置血压图片宽高及位置 */
+.pressure-picture {
+  position: absolute;
+  left: -17%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/pressure.png") no-repeat center center;
+  background-size: 15% 26%;
+  -webkit-animation: beat 1s linear infinite;
+  animation: beat 1s linear infinite;
+}
+
+/* 设置心率图表宽高及位置 */
+.heartValue {
+  position: relative;
+  width: 100%;
+  height: 33.3%;
+}
+
+/* 设置绝对定位 */
+#heartChart {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* 设置心脏照片宽高及位置 */
+.heart-picture {
+  position: absolute;
+  left: -17%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/heart.png") no-repeat center center;
+  background-size: 15% 28%;
+  -webkit-animation: beat 1s linear infinite;
+  animation: beat 1s linear infinite;
+}
+
+/* 设置脉率图表宽高 */
+.pulseValue {
+  position: relative;
+  width: 100%;
+  height: 33.3%;
+}
+
+/* 设置绝对定位 */
+#pulseChart {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* 设置脉率照片宽高及位置 */
+.pulse-picture {
+  position: absolute;
+  left: -17%;
+  width: 100%;
+  height: 100%;
+  background: url("/static/image/BigScreenApp/image/pulse.png") no-repeat center center;
+  background-size: 25% 30%;
+  -webkit-animation: beat 1s linear infinite;
+  animation: beat 1s linear infinite;
+}
+
+/* 主体2中间部分 */
+.main-two-middle {
+  position: relative;
+  float: left;
+  width: 40%;
+  height: 100%;
+}
+
+/* 生命参数展示图表布局 */
+#life {
+  position: absolute;
+  margin: 15px auto 0 0;
+  width: 96%;
+  height: 92%;
+  background-color: #ffffff0a;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+/* 设置生命参数背景图片宽高以及位置 */
+#bg {
+  position: absolute;
+  margin: 15px auto 0 0;
+  width: 96%;
+  height: 92%;
+  background: url("/static/image/BigScreenApp/image/bg.png") no-repeat center center;
+  background-size: 100% 100%;
+}
+
+/* 设置生命参数图片宽高以及位置 */
+.body-img1 {
+  position: absolute;
+  top: 7%;
+  left: 33%;
+  width: 299px;
+  height: 708px;
+  background: url("/static/image/BigScreenApp/image/body.png") no-repeat;
+  background-size: 90% 90%;
+}
+
+/* 设置生命参数图片宽高以及位置 */
+.body-img2 {
+  position: absolute;
+  top: 68%;
+  left: 31.5%;
+  width: 284px;
+  height: 206px;
+  background: url("/static/image/BigScreenApp/image/bottom.png") no-repeat;
+  background-size: 100% 100%;
+}
+
+/* 波纹宽高设置 */
+.wave {
+  position: absolute;
+  top: 78%;
+  width: 100%;
+  height: 20%;
+}
+
+/* 添加波纹扩散动画 */
+.wave img {
+  position: absolute;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  animation: wave 3.5s infinite;
+  -webkit-animation: wave 3.5s infinite;
+  opacity: 0;
+}
+
+/* 设置波纹图片播放时间 */
+.wave #wave1 {
+  -webkit-animation-delay: 0s;
+  animation-delay: 0s;
+}
+
+/* 设置波纹图片播放时间 */
+.wave #wave2 {
+  -webkit-animation-delay: 0.7s;
+  animation-delay: 0.7s;
+}
+
+/* 设置波纹图片播放时间 */
+.wave #wave3 {
+  -webkit-animation-delay: 1.4s;
+  animation-delay: 1.4s;
+}
+
+/* 设置波纹图片播放时间 */
+.wave #wave4 {
+  -webkit-animation-delay: 2.1s;
+  animation-delay: 2.1s;
+}
+
+/* 设置波纹图片播放时间 */
+.wave #wave5 {
+  -webkit-animation-delay: 2.8s;
+  animation-delay: 2.8s;
+}
+
+/* 设置波纹图片播放时间 */
+.wave #wave6 {
+  -webkit-animation-delay: 3.5s;
+  animation-delay: 3.5s;
+}
+
+/* 设置卡片环绕样式 */
+.surround {
+  position: absolute;
+  top: 30%;
+  width: 100%;
+  height: 20%;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-perspective: 1000px;
+  -moz-perspective: 1000px;
+  -o-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* 添加卡片环绕动画 */
+.carousel {
+  position: absolute;
+  left: 41%;
+  width: 20%;
+  height: 100%;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-animation: img-rotate 30s infinite linear;
+  animation: img-rotate 30s infinite linear;
+}
+
+/* 设置环绕卡片样式 */
+.carousel figure {
+  position: absolute;
+  display: block;
+  width: 85%;
+  height: 85%;
+  border: solid 2px #09b0d3;
+}
+
+/* 设置环绕图片样式 */
+.carousel img {
+  width: 100%;
+  height: 80%;
+  transition: all 0.5s ease;
+}
+
+/* 设置环绕字体样式 */
+.carousel span {
+  display: block;
+  font-weight: 700;
+  text-align: center;
+  color: #29ccf5;
+}
+
+/* 设置环绕卡片的初始位置 */
+.carousel figure:nth-child(1) {
+  transform: rotateY(0deg) translateZ(240px);
+}
+
+/* 设置环绕卡片的初始位置 */
+.carousel figure:nth-child(2) {
+  transform: rotateY(72deg) translateZ(240px);
+}
+
+/* 设置环绕卡片的初始位置 */
+.carousel figure:nth-child(3) {
+  transform: rotateY(144deg) translateZ(240px);
+}
+
+/* 设置环绕卡片的初始位置 */
+.carousel figure:nth-child(4) {
+  transform: rotateY(216deg) translateZ(240px);
+}
+
+/* 设置环绕卡片的初始位置 */
+.carousel figure:nth-child(5) {
+  transform: rotateY(288deg) translateZ(240px);
+}
+
+/* 主体2右边部分 */
+.main-two-right {
+  float: left;
+  width: 25%;
+  height: 100%;
+}
+
+/* 主体2右上部分 */
+.main-two-right .right-top {
+  width: 100%;
+  height: 50%;
+}
+
+/* 测量统计图表布局 */
+#measure {
+  position: relative;
+  overflow: hidden;
+  margin-top: 15px;
+  width: 100%;
+  height: 85%;
+  background-color: #ffffff0a;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-perspective: 1000px;
+  -moz-perspective: 1000px;
+  -o-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* 各个柱状图表样式设置 */
+#measure li {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  font-size: 50px;
+  font-weight: 700;
+  color: #fff;
+  transition: all 0.5s ease;
+}
+
+/* 体温图表初始位置 */
+#temp {
+  transform: translate3d(-900, 0, -600);
+  opacity: 0;
+}
+
+/* 呼吸图表初始位置 */
+#resp {
+  transform: translate3d(-600, 0, -400);
+  opacity: 0;
+}
+
+/* 心率图表初始位置 */
+#heart {
+  transform: translate3d(-300, 0, -200);
+  opacity: 0;
+}
+
+/* 脉率图表初始位置 */
+#pulse {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+}
+
+/* 血氧饱和度图表初始位置 */
+#spo2 {
+  transform: translate3d(300, 0, 200);
+  opacity: 0;
+}
+
+/* 舒张压图表初始位置 */
+#diastolic {
+  transform: translate3d(600, 0, 400);
+  opacity: 0;
+}
+
+/* 收缩压图表初始位置 */
+#systolic {
+  transform: translate3d(900, 0, 600);
+  opacity: 0;
+}
+
+/* 主体2右下部分 */
+.main-two-right .right-bottom {
+  width: 100%;
+  height: 50%;
+}
+
+/* 异常统计图表布局 */
+#exception {
+  margin-top: 15px;
+  width: 100%;
+  height: 85%;
+  background-color: #ffffff0a;
+}
+
+/* 参数展示图表背景图片旋转动画 */
+@-webkit-keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 参数展示图表背景图片旋转动画 */
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 参数展示图表器官图片跳动动画 */
+@-webkit-keyframes beat {
+  60% {
+    transform: scale(1.2, 1.1);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* 参数展示图表器官图片跳动动画*/
+@keyframes beat {
+  60% {
+    transform: scale(1.2, 1.1);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* 生命参数图表波纹扩散动画 */
+@-webkit-keyframes wave {
+  from {
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  to {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+  }
+}
+
+/* 生命参数图表波纹扩散动画 */
+@keyframes wave {
+  from {
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  to {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+  }
+}
+
+/* 生命参数图表卡片环绕动画 */
+@-webkit-keyframes img-rotate {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+/* 生命参数图表卡片环绕动画 */
+@keyframes img-rotate {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
