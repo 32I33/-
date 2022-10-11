@@ -14,18 +14,18 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    border-radius: 5px;
+    border-radius: 7vh;
 }
 
 .ac-game-settings-register {
-    height: 41vh;
+    height: 49vh;
     width: 20vw;
     background-color: rgba(0, 0, 0, 0.7);
     position: relative;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    border-radius: 5px;
+    border-radius: 7vh;
 }
 
 .ac-game-settings-title {
@@ -123,15 +123,15 @@
 .ac-game-menu-field {
     width: 20vw;
     position: relative;
-    top: 40%;
-    left: 20%;
+    top: 40vh;
+    left: 19vw;
 }
 
 .ac-game-menu-field-item {
     color: white;
-    height: 6vh;
+    height: 7vh;
     width: 18vw;
-    font-size: 4vh;
+    font-size: 6vh;
     font-style: italic;
     padding: 2vh;
     text-align: center;

@@ -8,4 +8,4 @@ def index(request):
             'refresh': data.get('refresh',""),
     }
     # 这里是从multiends开始而不是从templetes开始原因是作者就是这样定义的!
-    return render(request, "multiends/web.html", context)
+    return render(request, "multiends/web.html", context)   # 这里就会返回前端的界面

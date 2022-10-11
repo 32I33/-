@@ -14,5 +14,3 @@ class InfoView(APIView):
             "username": user.username,
             "photo": player.photo,
         })
-
-

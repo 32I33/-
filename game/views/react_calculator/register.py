@@ -1,7 +1,6 @@
 from django.http import JsonResponse
 from django.contrib.auth import login
 from django.contrib.auth.models import User
-from game.models.player.player import Player
 
 def register(request):
     data = request.GET
@@ -20,7 +19,7 @@ def register(request):
     user = User(username=username)
     user.set_password(password)
     user.save()
-    Player.objects.create(user = user, photo = "https://img2.baidu.com/it/u=750545161,580821559&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=501")
+    # 这里没有用Player.object.create去做了因为不需要创建用户
     login(request, user)        # 这个到时候在考虑，注册完之后最好再去登陆一便
     return JsonResponse({
         'result': "success",

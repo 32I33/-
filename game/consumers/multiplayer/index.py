@@ -46,7 +46,8 @@ class MultiPlayer(AsyncWebsocketConsumer):
         # Connect!
         transport.open()
 
-        # 加入生产者队列中
+        # 加入生产者队列
+
         client.add_player(player.score, data['uuid'], data['username'], data['photo'], self.channel_name)
 
         # Close!
@@ -112,7 +113,6 @@ class MultiPlayer(AsyncWebsocketConsumer):
               #  else:
                #     await database_sync_to_async(db_update_player_score)(player['username'], 10)
 
-        print('attack')
 
         await self.channel_layer.group_send(
                         self.room_name,
@@ -176,5 +176,3 @@ class MultiPlayer(AsyncWebsocketConsumer):
             await self.blink(data);
         elif event == "send_message":
             await self.send_message(data);
-
-

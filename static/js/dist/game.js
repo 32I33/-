@@ -1139,15 +1139,6 @@ class Settings {
         <div class="ac-game-settings-option">
             注册
         </div>
-        <br>
-        <br>
-        <div class="ac-game-settings-acwing">
-            <img src="https://app1495.acapp.acwing.com.cn/static/image/settings/acwing_logo.png">
-            <br>
-            <div>
-                AcWing一键登录
-            </div>
-        </div>
     </div>
     <div class="ac-game-settings-register">
         <div class="ac-game-settings-title">
@@ -1177,15 +1168,6 @@ class Settings {
         </div>
         <div class="ac-game-settings-option">
             登录
-        </div>
-        <br>
-        <br>
-        <div class="ac-game-settings-acwing">
-            <img src="https://app1495.acapp.acwing.com.cn/static/image/settings/acwing_logo.png">
-            <br>
-            <div>
-                AcWing一键登录
-            </div>
         </div>
     </div>
 </div>
@@ -1219,7 +1201,6 @@ class Settings {
         this.start();
     }
     start(){
-        console.log(this.username);
         if (this.platform === "WEB") {
             if (this.root.access) {
                 this.getinfo_web();
@@ -1385,7 +1366,6 @@ class Settings {
     }
 
     getinfo_web(){
-        console.log("hhh")
         let outer = this;
         $.ajax({
             url: "https://app1495.acapp.acwing.com.cn/settings/getinfo/",
@@ -1397,7 +1377,7 @@ class Settings {
                 'Authorization': "Bearer " + this.root.access,          // 头名字这里的Bearer是自己定义在settings.py里面定义的
             },
             success: function(resp){
-                console.log(resp);
+
                 if (resp.result === "success"){
 
                     outer.photo = resp.photo;
